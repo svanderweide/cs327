@@ -1,5 +1,5 @@
 import datetime
-from decimal import ROUND_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 class Transaction:
 
@@ -9,5 +9,5 @@ class Transaction:
     
     def __repr__(self):
         date = self.date.isoformat()
-        amount = self.amount.quantize(Decimal('0.01'), rounding=ROUND_UP)
+        amount = self.amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         return f"{date}, ${amount}"
