@@ -58,7 +58,7 @@ if __name__ == "__main__":
                 acct.add_transaction(amount, date)
             case '6':
                 # add interest/fees for account selected
-                pass
+                acct.add_interest()
             case '7':
                 # save bank with 'pickle' module
                 pass

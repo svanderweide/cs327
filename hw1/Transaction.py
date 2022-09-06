@@ -7,20 +7,23 @@ class Transaction:
     for a bank account
     
     Attributes:
-        amount (Decimal): stores the amount of the transaction
-        date (date): stores the date of the transaction as ISO date
+        amount (Decimal): amount of the transaction
+        date (date): date of the transaction as ISO date
+        automated (bool): automated (True) or manual (False)
     """
 
-    def __init__(self, amount, date):
+    def __init__(self, amount, date, automated):
         """
         Initializes class attributes
         
         Args:
             amount (str): amount of transaction
             date (str): date of transaction
+            manual (bool): automated vs. manual transaction
         """
         self.amount = Decimal(amount)
         self.date = datetime.date.fromisoformat(date)
+        self.automated = automated
     
     def __repr__(self):
         """Creates string representation"""
