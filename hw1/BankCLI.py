@@ -2,12 +2,20 @@ import pickle
 from Account import Account
 from Bank import Bank
 
-def get_input():
-    print(">", end='')
+def get_input(prompt=""):
+    """
+    Get user-input as a string
+    
+    Args:
+        get_input: string to be displayed on line before '>'
+    """
+    if (prompt != ""):
+        print(prompt)
+    print(">", end="")
     return input()
 
 def print_menu(acct):
-    
+    """Print the """
     COMMANDS = ["open account", "summary", "select account",
                 "list transactions", "add transaction",
                 "interest and fees", "save", "load", "quit"]
@@ -15,7 +23,7 @@ def print_menu(acct):
     print("--------------------------------")
     print("Currently selected account: ", end="")
     print("None") if acct is None else print(acct)
-    [print(f"{i}: {cmd}") for i, cmd in zip(range(1,10), COMMANDS)]
+    [print(f"{i}: {cmd}") for i, cmd in enumerate(COMMANDS, start=1)]
 
 if __name__ == "__main__":
     
@@ -29,32 +37,36 @@ if __name__ == "__main__":
 
         match cmd:
             case '1':
-                print("Type of account? (checking/savings)")
-                type = get_input()
-                print("Initial deposit amount?")
-                amount = get_input()
+                # open new account
+                type = get_input("Type of account? (checking/savings)")
+                amount = get_input("Initial deposit amount?")
                 bank.add_account(type, amount)
             case '2':
+                # list accounts
                 bank.get_accounts()
             case '3':
-                print("Enter account number")
-                num = get_input()
+                # select account
+                num = get_input("Enter account number")
                 acct = bank.get_account_by_num(num)
             case '4':
+                # list transactions for account selected
                 acct.get_transactions()
             case '5':
-                print("Amount?")
-                amount = get_input()
-                print("Date? (YYYY-MM-DD)")
-                date = get_input()
+                # add new transaction to account selected
+                amount = get_input("Amount?")
+                date = get_input("Date? (YYYY-MM-DD)")
                 acct.add_transaction(amount, date)
             case '6':
+                # add interest/fees for account selected
                 pass
             case '7':
+                # save bank with 'pickle' module
                 pass
             case '8':
+                # load bank with 'pickle' module
                 pass
             case '9':
+                # quit the CLI
                 break
             case _:
                 print(f"ERROR: input must be integer in [1, 9]")
