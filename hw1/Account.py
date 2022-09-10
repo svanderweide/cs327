@@ -21,18 +21,18 @@ class Account:
         if (automated or self._validate_transaction(amount, date)):
             self._add_transaction(amount, date, automated)
     
-    def _add_transaction(self, amount, date, automated):
-        new_transaction = Transaction(amount, date, automated)
-        self._transactions.append(new_transaction)
-        self._balance += new_transaction.amount
-
-    def _validate_transaction(self, amount, date):
-        return True if (self._balance + Decimal(amount) > 0) else False
-    
     def add_interest(self):
         amount = self._balance * self._interest_rate
         date = datetime.date.today().isoformat()
         self.add_transaction(amount, date, True)
+    
+    def _add_transaction(self, amount, date, automated):
+        new_transaction = Transaction(amount, date, automated)
+        self._transactions.append(new_transaction)
+        self._balance += Decimal(amount)
+
+    def _validate_transaction(self, amount, date):
+        return True if (self._balance + Decimal(amount) > 0) else False
 
 class Savings(Account):
     

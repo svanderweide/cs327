@@ -7,7 +7,7 @@ def get_input(prompt=""):
     Get user-input as a string
     
     Args:
-        get_input: string to be displayed on line before '>'
+        prompt: string to be displayed on line before '>'
     """
     if (prompt != ""):
         print(prompt)
@@ -62,12 +62,13 @@ if __name__ == "__main__":
                 acct.add_interest()
             case '7':
                 # save bank with 'pickle' module
-                pickle.dump(bank, 'bank.pickle')
-                pass
+                with open('bank.pickle', 'wb') as file:
+                    pickle.dump(bank, file)
             case '8':
                 # load bank with 'pickle' module
-                bank = pickle.load('bank.pickle')
-                pass
+                with open('bank.pickle', 'rb') as file:
+                    bank = pickle.load(file)
+                acct = None
             case '9':
                 # quit the CLI
                 break
