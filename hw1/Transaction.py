@@ -21,12 +21,12 @@ class Transaction:
             date (str): date of transaction
             manual (bool): automated vs. manual transaction
         """
-        self.amount = Decimal(amount)
-        self.date = datetime.date.fromisoformat(date)
-        self.automated = automated
+        self._amount = Decimal(amount)
+        self._date = datetime.date.fromisoformat(date)
+        self._automated = automated
     
     def __repr__(self):
         """Creates string representation"""
-        date = self.date.isoformat()
-        amount = self.amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        date = self._date.isoformat()
+        amount = self._amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         return f"{date}, ${amount}"

@@ -15,7 +15,8 @@ def get_input(prompt=""):
     return input()
 
 def print_menu(acct):
-    """Print the """
+    """Print the command menu"""
+
     COMMANDS = ["open account", "summary", "select account",
                 "list transactions", "add transaction",
                 "interest and fees", "save", "load", "quit"]
@@ -61,9 +62,11 @@ if __name__ == "__main__":
                 acct.add_interest()
             case '7':
                 # save bank with 'pickle' module
+                pickle.dump(bank, 'bank.pickle')
                 pass
             case '8':
                 # load bank with 'pickle' module
+                bank = pickle.load('bank.pickle')
                 pass
             case '9':
                 # quit the CLI
