@@ -19,14 +19,14 @@ class Transaction:
         Args:
             amount (str): amount of transaction
             date (str): date of transaction
-            manual (bool): automated vs. manual transaction
+            automated (bool): automated vs. manual transaction
         """
         self._amount = Decimal(amount)
         self._date = datetime.date.fromisoformat(date)
         self._automated = automated
     
-    def __repr__(self):
-        """Creates string representation"""
+    def __str__(self):
+        """Returns string representation of transaction"""
         date = self._date.isoformat()
         amount = self._amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         return f"{date}, ${amount}"

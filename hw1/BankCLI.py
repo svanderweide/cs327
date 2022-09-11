@@ -14,26 +14,22 @@ def get_input(prompt=""):
     print(">", end="")
     return input()
 
-def print_menu(acct):
-    """Print the command menu"""
-
-    COMMANDS = ["open account", "summary", "select account",
-                "list transactions", "add transaction",
-                "interest and fees", "save", "load", "quit"]
-    
-    print("--------------------------------")
-    print("Currently selected account: ", end="")
-    print("None") if acct is None else print(acct)
-    [print(f"{i}: {cmd}") for i, cmd in enumerate(COMMANDS, start=1)]
-
 if __name__ == "__main__":
     
     acct: Account = None
     bank = Bank()
 
+    COMMANDS = ["open account", "summary", "select account",
+                "list transactions", "add transaction",
+                "interest and fees", "save", "load", "quit"]
+
     while(True):
         
-        print_menu(acct)
+        print("--------------------------------")
+        print("Currently selected account: ", end="")
+        print("None") if acct is None else print(acct)
+        [print(f"{i}: {cmd}") for i, cmd in enumerate(COMMANDS, start=1)]
+        
         cmd = get_input()
 
         match cmd:
@@ -73,4 +69,5 @@ if __name__ == "__main__":
                 # quit the CLI
                 break
             case _:
+                # error if invalid
                 print(f"ERROR: input must be integer in [1, 9]")
