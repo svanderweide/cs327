@@ -1,73 +1,108 @@
+from cmd import PROMPT
+from sys import stderr
 import pickle
 from Account import Account
 from Bank import Bank
 
-def get_input(prompt=""):
-    """
-    Get user-input as a string
+class CLI:
+    """Display a CLI and respond to commands"""
+
+    def __init__(self) -> None:
+        """Initialize CLI variables"""
+
+        self._account: Account = None
+        self._bank: Bank = Bank()
+        self._choices = {
+            '1': 'open account',
+            '2': 'summary',
+            '3': 'select account',
+            '4': 'list transactions',
+            '5': 'add transaction',
+            '6': 'interest and fees',
+            '7': 'save',
+            '8': 'load',
+            '9': 'quit'
+        }
+
+    def _print_account(self) -> None:
+        print("Currently selected account: ", end="")
+        if self._account is None:
+            print("None")
+        else:
+            print(self._account)
+
+    def _print_choices(self) -> None:
+        print("--------------------------------")
+        self._print_account()
+        [print(f"{idx}: {cmd}") for idx, cmd in self._choices.items()]
     
-    Args:
-        prompt: string to be displayed on line before '>'
-    """
-    if (prompt != ""):
-        print(prompt)
-    print(">", end="")
-    return input()
+    def _input(self, __prompt=None) -> str:
+        if __prompt:
+            print(__prompt)
+        print(">", end="")
+        return input()
+
+    def run(self) -> None:
+        """Display command options and run REPL"""
+        while(True):
+            self._print_choices()
+            cmd = self._input()
+            if cmd == '1':
+                self._add_account()
+            elif cmd == '2':
+                self._get_summary()
+            elif cmd == '3':
+                self._set_account()
+            elif cmd == '4':
+                self._get_transactions()
+            elif cmd == '5':
+                self._add_transaction()
+            elif cmd == '6':
+                self._add_interest()
+            elif cmd == '7':
+                self._save()
+            elif cmd == '8':
+                self._load()
+            elif cmd == '9':
+                self._quit()
+            else:
+                print("ERROR: insert a value between 1 and 9\n", file=stderr)
+
+    def _add_account(self) -> None:
+        acct_type = input("Type of account? (checking/savings)")
+        acct_amnt = input("Initial deposit amount?")
+        self._bank.add_account(acct_type, acct_amnt)
+
+    def _get_summary(self) -> None:
+        self._bank.get_accounts()
+
+    def _set_account(self) -> None:
+        acct_id = input("Enter account number")
+        self._bank.get_account_by_id(acct_id)
+
+    def _get_transactions(self) -> None:
+        self._account.print_transactions()
+
+    def _add_transaction(self) -> None:
+        trans_amnt = input("Amount?")
+        trans_date = input("Date? (YYYY-MM-DD)")
+        self._account.add_transaction(trans_amnt, trans_date)
+
+    def _add_interest(self) -> None:
+        self._account.add_interest()
+
+    def _save(self) -> None:
+        with open('bank.pickle', 'wb') as file:
+            pickle.dump(self._bank, file)
+
+    def _load(self) -> None:
+        with open('bank.pickle', 'rb') as file:
+            self._bank = pickle.load(file)
+            self._account = None
+
+    def _quit(self) -> None:
+        exit(0)
 
 if __name__ == "__main__":
-    
-    acct: Account = None
-    bank = Bank()
 
-    COMMANDS = ["open account", "summary", "select account",
-                "list transactions", "add transaction",
-                "interest and fees", "save", "load", "quit"]
-
-    while(True):
-        
-        print("--------------------------------")
-        print("Currently selected account: ", end="")
-        print("None") if acct is None else print(acct)
-        [print(f"{i}: {cmd}") for i, cmd in enumerate(COMMANDS, start=1)]
-        
-        cmd = get_input()
-
-        match cmd:
-            case '1':
-                # open new account
-                type = get_input("Type of account? (checking/savings)")
-                amount = get_input("Initial deposit amount?")
-                bank.add_account(type, amount)
-            case '2':
-                # list accounts
-                bank.get_accounts()
-            case '3':
-                # select account
-                num = get_input("Enter account number")
-                acct = bank.get_account_by_num(num)
-            case '4':
-                # list transactions for account selected
-                acct.get_transactions()
-            case '5':
-                # add new transaction to account selected
-                amount = get_input("Amount?")
-                date = get_input("Date? (YYYY-MM-DD)")
-                acct.add_transaction(amount, date)
-            case '6':
-                # add interest/fees for account selected
-                acct.add_interest()
-            case '7':
-                # save bank with 'pickle' module
-                with open('bank.pickle', 'wb') as file:
-                    pickle.dump(bank, file)
-            case '8':
-                # load bank with 'pickle' module
-                with open('bank.pickle', 'rb') as file:
-                    bank = pickle.load(file)
-                acct = None
-            case '9':
-                # quit the CLI
-                break
-            case _:
-                # error if invalid
-                print(f"ERROR: input must be integer in [1, 9]")
+    CLI().run()
