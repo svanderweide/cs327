@@ -12,20 +12,19 @@ class Transaction:
         automated (bool): automated (True) or manual (False)
     """
 
-    def __init__(self, amount, date, automated):
-        """
-        Initializes class attributes
+    def __init__(self, amount: str, date: str, automated: bool) -> None:
+        """Initializes transaction attributes
         
         Args:
-            amount (str): amount of transaction
-            date (str): date of transaction
-            automated (bool): automated vs. manual transaction
+            amount: amount of transaction
+            date: date of transaction
+            automated: automated vs. manual transaction
         """
         self._amount = Decimal(amount)
         self._date = datetime.date.fromisoformat(date)
         self._automated = automated
     
-    def __str__(self):
+    def __str__(self) -> str:
         """Returns string representation of transaction"""
         date = self._date.isoformat()
         amount = self._amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
