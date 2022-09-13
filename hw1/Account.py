@@ -50,7 +50,7 @@ class Account:
         self._balance += Decimal(amnt)
 
     def _validate_transaction(self, amnt, date):
-        return True if (self._balance + Decimal(amnt) > 0) else False
+        return self._balance < 0 or self._balance + Decimal(amnt) >= 0
 
 class Savings(Account):
     """Account subclass for Savings account"""
@@ -80,7 +80,10 @@ class Savings(Account):
                         same_day += 1
         
         # savings account-specific validation
-        return same_day < 2 and same_month < 5 and super()._validate_transaction(amnt, date)
+        if same_day < 2 and same_month < 5:
+            return super()._validate_transaction(amnt, date)
+        else:
+            return False
 
 
 class Checking(Account):
