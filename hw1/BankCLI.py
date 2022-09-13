@@ -71,7 +71,7 @@ class CLI:
         self._account = self._bank.get_account_by_id(acct_id)
 
     def _get_transactions(self) -> None:
-        transacts = self._account.transactions
+        transacts = sorted(self._account.transactions)
         [print(str(transact)) for transact in transacts]
 
     def _add_transaction(self) -> None:

@@ -24,5 +24,8 @@ class Transaction:
 
     def _get_automated(self) -> bool:
         return self._automated
+    
+    def __lt__(self, other) -> bool:
+        return self._date < other._date
 
     automated = property(_get_automated)
