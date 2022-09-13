@@ -8,15 +8,15 @@ class CLI:
         self._account: Account = None
         self._bank: Bank = Bank()
         self._choices = {
-            '1': self._add_account,
-            '2': self._get_summary,
-            '3': self._set_account,
-            '4': self._get_transactions,
-            '5': self._add_transaction,
-            '6': self._add_interest,
-            '7': self._save,
-            '8': self._load,
-            '9': self._quit
+            "1": self._add_account,
+            "2": self._get_summary,
+            "3": self._set_account,
+            "4": self._get_transactions,
+            "5": self._add_transaction,
+            "6": self._add_interest,
+            "7": self._save,
+            "8": self._load,
+            "9": self._quit
         }
 
     def run(self) -> None:
@@ -40,15 +40,16 @@ class CLI:
     def _print_choices(self) -> None:
         print("--------------------------------")
         self._print_account()
-        print('1: open account\n'
-              '2: summary\n'
-              '3: select account\n'
-              '4: list transactions\n'
-              '5: add transaction\n'
-              '6: interest and fees\n'
-              '7: save\n'
-              '8: load\n'
-              '9: quit')
+        print("Enter command")
+        print("1: open account\n"
+              "2: summary\n"
+              "3: select account\n"
+              "4: list transactions\n"
+              "5: add transaction\n"
+              "6: interest and fees\n"
+              "7: save\n"
+              "8: load\n"
+              "9: quit")
     
     def _input(self, __prompt=None) -> str:
         if __prompt:
@@ -82,11 +83,11 @@ class CLI:
         self._account.add_interest()
 
     def _save(self) -> None:
-        with open('bank.pickle', 'wb') as file:
+        with open("bank.pickle", "wb") as file:
             dump(self._bank, file)
 
     def _load(self) -> None:
-        with open('bank.pickle', 'rb') as file:
+        with open("bank.pickle", "rb") as file:
             self._bank = load(file)
         self._account = None
 
