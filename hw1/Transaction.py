@@ -20,7 +20,7 @@ class Transaction:
     
     def same_day(self, other) -> bool:
         """Return True if transaction on same day in same month"""
-        return self._date.day == other._date.day and self._same_month(other)
+        return self._date.day == other._date.day and self.same_month(other)
 
     def _get_automated(self) -> bool:
         return self._automated

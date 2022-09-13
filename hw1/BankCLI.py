@@ -1,28 +1,34 @@
-from cmd import PROMPT
-from sys import stderr
-import pickle
-from Account import Account
-from Bank import Bank
+from pickle import dump, load
+from Bank import Account, Bank
 
 class CLI:
     """Display a CLI and respond to commands"""
 
     def __init__(self) -> None:
-        """Initialize CLI variables"""
-
         self._account: Account = None
         self._bank: Bank = Bank()
         self._choices = {
-            '1': 'open account',
-            '2': 'summary',
-            '3': 'select account',
-            '4': 'list transactions',
-            '5': 'add transaction',
-            '6': 'interest and fees',
-            '7': 'save',
-            '8': 'load',
-            '9': 'quit'
+            '1': self._add_account,
+            '2': self._get_summary,
+            '3': self._set_account,
+            '4': self._get_transactions,
+            '5': self._add_transaction,
+            '6': self._add_interest,
+            '7': self._save,
+            '8': self._load,
+            '9': self._quit
         }
+
+    def run(self) -> None:
+        """Display command options and run REPL"""
+        while True:
+            self._print_choices()
+            choice = self._input()
+            action = self._choices.get(choice)
+            if action:
+                action()
+            else:
+                print(f"{choice} is not a valid choice\n")
 
     def _print_account(self) -> None:
         print("Currently selected account: ", end="")
@@ -30,11 +36,19 @@ class CLI:
             print("None")
         else:
             print(self._account)
-
+    
     def _print_choices(self) -> None:
         print("--------------------------------")
         self._print_account()
-        [print(f"{idx}: {cmd}") for idx, cmd in self._choices.items()]
+        print('1: open account\n'
+              '2: summary\n'
+              '3: select account\n'
+              '4: list transactions\n'
+              '5: add transaction\n'
+              '6: interest and fees\n'
+              '7: save\n'
+              '8: load\n'
+              '9: quit')
     
     def _input(self, __prompt=None) -> str:
         if __prompt:
@@ -42,50 +56,26 @@ class CLI:
         print(">", end="")
         return input()
 
-    def run(self) -> None:
-        """Display command options and run REPL"""
-        while(True):
-            self._print_choices()
-            cmd = self._input()
-            if cmd == '1':
-                self._add_account()
-            elif cmd == '2':
-                self._get_summary()
-            elif cmd == '3':
-                self._set_account()
-            elif cmd == '4':
-                self._get_transactions()
-            elif cmd == '5':
-                self._add_transaction()
-            elif cmd == '6':
-                self._add_interest()
-            elif cmd == '7':
-                self._save()
-            elif cmd == '8':
-                self._load()
-            elif cmd == '9':
-                self._quit()
-            else:
-                print("ERROR: insert a value between 1 and 9\n", file=stderr)
-
     def _add_account(self) -> None:
-        acct_type = input("Type of account? (checking/savings)")
-        acct_amnt = input("Initial deposit amount?")
+        acct_type = self._input("Type of account? (checking/savings)")
+        acct_amnt = self._input("Initial deposit amount?")
         self._bank.add_account(acct_type, acct_amnt)
 
     def _get_summary(self) -> None:
-        self._bank.get_accounts()
+        accts = self._bank.accounts
+        [print(str(acct)) for acct in accts]
 
     def _set_account(self) -> None:
-        acct_id = input("Enter account number")
-        self._bank.get_account_by_id(acct_id)
+        acct_id = self._input("Enter account number")
+        self._account = self._bank.get_account_by_id(acct_id)
 
     def _get_transactions(self) -> None:
-        self._account.print_transactions()
+        transacts = self._account.transactions
+        [print(str(transact)) for transact in transacts]
 
     def _add_transaction(self) -> None:
-        trans_amnt = input("Amount?")
-        trans_date = input("Date? (YYYY-MM-DD)")
+        trans_amnt = self._input("Amount?")
+        trans_date = self._input("Date? (YYYY-MM-DD)")
         self._account.add_transaction(trans_amnt, trans_date)
 
     def _add_interest(self) -> None:
@@ -93,16 +83,15 @@ class CLI:
 
     def _save(self) -> None:
         with open('bank.pickle', 'wb') as file:
-            pickle.dump(self._bank, file)
+            dump(self._bank, file)
 
     def _load(self) -> None:
         with open('bank.pickle', 'rb') as file:
-            self._bank = pickle.load(file)
-            self._account = None
+            self._bank = load(file)
+        self._account = None
 
     def _quit(self) -> None:
         exit(0)
 
 if __name__ == "__main__":
-
     CLI().run()
