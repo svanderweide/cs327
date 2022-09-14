@@ -24,7 +24,7 @@ class Account:
         self._balance = Decimal(0)
         self._interest_rate = Decimal(0)
 
-    def num_matches(self, num: str):
+    def num_matches(self, num: str) -> bool:
         """Check if this account has the given num"""
         return self._num == int(num)
 
@@ -40,7 +40,7 @@ class Account:
         if self._validate_transaction(amnt, date):
             self._add_transaction(amnt, date, False)
 
-    def add_interest(self):
+    def add_interest(self) -> None:
         """Add transactions for interest (and fees) on balance"""
         amnt = self._balance * self._interest_rate
         date = datetime.date.today().isoformat()
@@ -55,27 +55,27 @@ class Account:
     def _get_balance(self) -> Decimal:
         return self._balance.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-    def _add_transaction(self, amnt, date, automated):
+    def _add_transaction(self, amnt, date, automated) -> None:
         new_transaction = Transaction(amnt, date, automated)
         self._transactions.append(new_transaction)
         self._balance += Decimal(amnt)
 
-    def _validate_transaction(self, amnt, date):
+    def _validate_transaction(self, amnt, date) -> bool:
         return self._balance < 0 or self._balance + Decimal(amnt) >= 0
 
 class Savings(Account):
     """Account subclass for Savings account"""
 
-    def __init__(self, num: int):
+    def __init__(self, num: int) -> None:
         super().__init__(num)
         self._interest_rate = Decimal('0.029')
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Returns string representation of savings account"""
         balance = self._get_balance()
         return f"Savings#{self._num:0>9},\tbalance: ${balance:,}"
 
-    def _validate_transaction(self, amnt: str, date: str):
+    def _validate_transaction(self, amnt: str, date: str) -> bool:
 
         # temporary transaction
         tmp = Transaction(amnt, date)
@@ -99,16 +99,16 @@ class Savings(Account):
 class Checking(Account):
     """Account subclass for Checking account"""
 
-    def __init__(self, num: int):
+    def __init__(self, num: int) -> None:
         super().__init__(num)
         self._interest_rate = Decimal('0.0012')
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Returns string representation of checking account"""
         balance = self._get_balance()
         return f"Checking#{self._num:0>9},\tbalance: ${balance:,}"
 
-    def add_interest(self):
+    def add_interest(self) -> None:
         """Add transactions for interest (and fees) on balance"""
         super().add_interest()
         if self._balance < Decimal('100'):

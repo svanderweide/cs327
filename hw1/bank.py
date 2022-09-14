@@ -42,7 +42,7 @@ class Bank:
                 return acct
         return None
 
-    def _get_accounts(self):
+    def _get_accounts(self) -> list:
         """Return the accounts stored in the bank"""
         return self._accounts
 
