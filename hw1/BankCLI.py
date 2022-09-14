@@ -76,8 +76,8 @@ class CLI:
             print(str(acct))
 
     def _set_account(self) -> None:
-        acct_id = self._input("Enter account number")
-        self._account = self._bank.get_account_by_id(acct_id)
+        acct_num = self._input("Enter account number")
+        self._account = self._bank.get_account_by_num(acct_num)
 
     def _get_transactions(self) -> None:
         transacts = sorted(self._account.transactions)
