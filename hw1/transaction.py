@@ -18,7 +18,7 @@ class Transaction:
     def __str__(self) -> str:
         date = self._date.isoformat()
         amnt = self._amnt.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        return f"{date}, ${amnt}"
+        return f"{date}, ${amnt:,}"
 
     def same_month(self, other) -> bool:
         """Return True if transactions in same month"""

@@ -73,7 +73,7 @@ class Savings(Account):
     def __str__(self):
         """Returns string representation of savings account"""
         balance = self._get_balance()
-        return f"Savings#{self._num:0>9},\tbalance: ${balance}"
+        return f"Savings#{self._num:0>9},\tbalance: ${balance:,}"
 
     def _validate_transaction(self, amnt: str, date: str):
 
@@ -106,7 +106,7 @@ class Checking(Account):
     def __str__(self):
         """Returns string representation of checking account"""
         balance = self._get_balance()
-        return f"Checking#{self._num:0>9},\tbalance: ${balance}"
+        return f"Checking#{self._num:0>9},\tbalance: ${balance:,}"
 
     def add_interest(self):
         """Add transactions for interest (and fees) on balance"""
