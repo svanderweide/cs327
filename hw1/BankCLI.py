@@ -1,5 +1,13 @@
+"""
+BankCLI module
+
+implements CLI for Bank interface
+"""
+
+import sys
 from pickle import dump, load
-from Bank import Account, Bank
+from account import Account
+from bank import Bank
 
 class CLI:
     """Display a CLI and respond to commands"""
@@ -36,7 +44,7 @@ class CLI:
             print("None")
         else:
             print(self._account)
-    
+
     def _print_choices(self) -> None:
         print("--------------------------------")
         self._print_account()
@@ -50,7 +58,7 @@ class CLI:
               "7: save\n"
               "8: load\n"
               "9: quit")
-    
+
     def _input(self, __prompt=None) -> str:
         if __prompt:
             print(__prompt)
@@ -64,7 +72,8 @@ class CLI:
 
     def _get_summary(self) -> None:
         accts = self._bank.accounts
-        [print(str(acct)) for acct in accts]
+        for acct in accts:
+            print(str(acct))
 
     def _set_account(self) -> None:
         acct_id = self._input("Enter account number")
@@ -72,7 +81,8 @@ class CLI:
 
     def _get_transactions(self) -> None:
         transacts = sorted(self._account.transactions)
-        [print(str(transact)) for transact in transacts]
+        for transact in transacts:
+            print(str(transact))
 
     def _add_transaction(self) -> None:
         trans_amnt = self._input("Amount?")
@@ -91,8 +101,8 @@ class CLI:
             self._bank = load(file)
         self._account = None
 
-    def _quit(self) -> None:
-        exit(0)
+    def _quit(self):
+        sys.exit(0)
 
 if __name__ == "__main__":
     CLI().run()
