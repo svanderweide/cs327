@@ -12,6 +12,12 @@ classes:
 from decimal import Decimal
 from transaction import Transaction
 
+class OverdrawError(Exception):
+    """Custom exception to handle overdrawn balance errors"""
+
+class TransactionLimitError(Exception):
+    """Custom exception to handle invalid transactions on Savings accounts"""
+
 class Account:
     """Abstract class for account subclasses"""
 
@@ -22,9 +28,25 @@ class Account:
 
     def __str__(self) -> str:
         """Formats the account's number and balance"""
-        return f"#{self._num:0>9},\tbalance: ${self._get_balance():,.2f}"
+        return f"#{self._num:0>9},\tbalance: ${self.balance:,.2f}"
 
-    def add_transaction(self, amt, *, date=None, exempt=False):
+    def _get_balance(self) -> Decimal:
+        """Calculates the balance for an account by summing its transactions
+
+        Returns:
+            Decimal: current balance
+        """
+        return sum(x for x in self._transactions)
+
+    balance = property(_get_balance)
+
+    def _get_transactions(self) -> list[Transaction]:
+        """Returns sorted list of the account's transaction"""
+        return sorted(self._transactions)
+
+    transactions = property(_get_transactions)
+
+    def add_transaction(self, amt, *, date=None, exempt=False) -> None:
         """
         Creates a pending transaction with given amount and date
         and adds transaction to the account if allowed by account rules
@@ -41,7 +63,13 @@ class Account:
         bal_ok = self._check_balance(trans)
         lim_ok = self._check_limits(trans)
 
-        if trans.is_exempt() or (bal_ok and lim_ok):
+        if trans.is_exempt():
+            self._transactions.append(trans)
+        elif not bal_ok:
+            raise OverdrawError
+        elif not lim_ok:
+            raise TransactionLimitError
+        else:
             self._transactions.append(trans)
 
     def _check_balance(self, trans: Transaction) -> bool:
@@ -58,35 +86,19 @@ class Account:
     def _check_limits(self, trans1: Transaction) -> bool:
         return trans1 is not None
 
-    def _get_balance(self):
-        """Calculates the balance for an account by summing its transactions
-
-        Returns:
-            Decimal: current balance
-        """
-        return sum(x for x in self._transactions)
-
-    balance = property(_get_balance)
-
-    def interest_and_fees(self):
+    def interest_and_fees(self) -> None:
         """Calculate interest and fees for the account"""
         self._interest()
         self._fees()
 
-    def _interest(self):
+    def _interest(self) -> None:
         """Calculate interest for the current balance and add
         as a new transaction exempt from account limits"""
         interest: Decimal = self._get_balance() * self._interest_rate
         self.add_transaction(interest, exempt=True)
 
-    def _fees(self):
+    def _fees(self) -> None:
         pass
-
-    def _get_transactions(self):
-        """Returns sorted list of the account's transaction"""
-        return sorted(self._transactions)
-
-    transactions = property(_get_transactions)
 
 
 class SavingsAccount(Account):
@@ -133,7 +145,7 @@ class CheckingAccount(Account):
     def __str__(self) -> str:
         return "Checking" + super().__str__()
 
-    def _fees(self):
+    def _fees(self) -> None:
         """Adds a low-balance fee if balance below threshold"""
         if self._get_balance() < self._balance_threshold:
             self.add_transaction(self._low_balance_fee, exempt=True)

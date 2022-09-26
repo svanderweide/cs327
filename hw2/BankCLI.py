@@ -6,8 +6,10 @@ implements CLI for Bank interface
 
 import sys
 from pickle import dump, load
-from account import Account
+from decimal import InvalidOperation
+
 from bank import Bank
+from account import Account, OverdrawError, TransactionLimitError
 
 class CLI:
     """Display a CLI and respond to commands"""
@@ -89,25 +91,43 @@ class CLI:
             for transaction in transactions:
                 print(transaction)
 
-    def _add_transaction(self) -> None:
-        trans_amnt = self._input("Amount?")
-        trans_date = self._input("Date? (YYYY-MM-DD)")
+    def _add_transaction(self, *, amt=None, date=None) -> None:
+        trans_amt = self._input("Amount?") if amt is None else amt
+        trans_date = self._input("Date? (YYYY-MM-DD)") if date is None else date
         try:
-            self._account.add_transaction(trans_amnt, date=trans_date)
+            self._account.add_transaction(trans_amt, date=trans_date)
+        except InvalidOperation:
+            print("Please try again with a valid dollar amount.")
+            self._add_transaction(date=trans_date)
+        except ValueError:
+            print("Please try again with a valid date in the format YYYY-MM-DD.")
+            self._add_transaction(amt=trans_amt)
         except AttributeError:
             print("This command requires that you first select an account.")
+        except OverdrawError:
+            print("This transaction could not be completed due to an insufficient account balance.")
+        except TransactionLimitError:
+            print("This transaction could not be completed because the account has reached a transaction limit.")
 
     def _interest_and_fees(self) -> None:
-        self._account.interest_and_fees()
+        try:
+            self._account.interest_and_fees()
+        except AttributeError:
+            print("This command requires that you first select an account.")
 
     def _save(self) -> None:
         with open("bank.pickle", "wb") as file:
             dump(self._bank, file)
 
+
     def _load(self) -> None:
-        with open("bank.pickle", "rb") as file:
-            self._bank = load(file)
-        self._account = None
+        try:
+            with open("bank.pickle", "rb") as file:
+                self._bank = load(file)
+        except FileNotFoundError:
+            print("This command requires you to save the bank before loading.")
+        else:
+            self._account = None
 
     def _quit(self):
         sys.exit(0)
