@@ -152,8 +152,8 @@ class CLI:
     def _interest_and_fees(self) -> None:
         try:
             self._account.interest_and_fees()
-        # except AttributeError:
-        #     print("This command requires that you first select an account.")
+        except AttributeError:
+            print("This command requires that you first select an account.")
         except TransactionSequenceError as e:
             print(f"Cannot apply interest and fees again in the month of {e.latest_date.strftime('%B')}.")
 
