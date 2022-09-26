@@ -21,7 +21,7 @@ class CLI:
             "3": self._set_account,
             "4": self._get_transactions,
             "5": self._add_transaction,
-            "6": self._add_interest,
+            "6": self._interest_and_fees,
             "7": self._save,
             "8": self._load,
             "9": self._quit
@@ -68,33 +68,37 @@ class CLI:
     def _add_account(self) -> None:
         acct_type = self._input("Type of account? (checking/savings)")
         acct_amnt = self._input("Initial deposit amount?")
-        self._bank.add_account(acct_type, acct_amnt)
+        acct = self._bank.add_account(acct_type)
+        acct.add_transaction(acct_amnt)
 
     def _get_summary(self) -> None:
         accts = self._bank.accounts
         for acct in accts:
-            print(str(acct))
+            print(acct)
 
     def _set_account(self) -> None:
         acct_num = self._input("Enter account number")
-        self._account = self._bank.get_account_by_num(acct_num)
+        self._account = self._bank.get_account(int(acct_num))
 
     def _get_transactions(self) -> None:
         try:
-            transacts = sorted(self._account.transactions)
-        except AttributeError as e:
-            print("")
+            transactions = sorted(self._account.transactions)
+        except AttributeError:
+            print("This command requires that you first select an account.")
         else:
-            for transact in transacts:
-                print(transact)
+            for transaction in transactions:
+                print(transaction)
 
     def _add_transaction(self) -> None:
         trans_amnt = self._input("Amount?")
         trans_date = self._input("Date? (YYYY-MM-DD)")
-        self._account.add_transaction(trans_amnt, trans_date)
+        try:
+            self._account.add_transaction(trans_amnt, date=trans_date)
+        except AttributeError:
+            print("This command requires that you first select an account.")
 
-    def _add_interest(self) -> None:
-        self._account.add_interest()
+    def _interest_and_fees(self) -> None:
+        self._account.interest_and_fees()
 
     def _save(self) -> None:
         with open("bank.pickle", "wb") as file:

@@ -4,46 +4,57 @@ bank module
 implements Bank class to aggregate Accounts
 """
 
-import datetime
-from account import Account, Savings, Checking
+from account import Account, SavingsAccount, CheckingAccount
+
+# constants for pattern matching
+SAVINGS = "savings"
+CHECKING = "checking"
 
 class Bank:
     """Contains information about accounts at a bank"""
 
     def __init__(self) -> None:
-        self._accounts: list = []
-        self._max_num: int = 1
+        self._accounts: dict[Account] = {}
 
-    def add_account(self, acct_type: str, init_bal: str) -> None:
-        """Creates and adds an account to the bank"""
+    def add_account(self, acct_type: str) -> Account:
+        """Creates and adds an account to the bank
 
-        # savings account if 'savings'
-        if acct_type == "savings":
-            acct = Savings(self._max_num)
-        # checking account if 'checking'
-        elif acct_type == "checking":
-            acct = Checking(self._max_num)
-        # otherwise, invalid type
-        else: return
+        Args:
+            type (str): "savings" or "checking" to indicate accont type
 
-        self._max_num += 1
+        Returns:
+            Account: Account object created or None if type not matched
+        """
+        acct_num = self._generate_account_number()
 
-        # create account's initial transaction
-        date = datetime.date.today().isoformat()
-        acct.add_transaction(init_bal, date)
+        if acct_type == SAVINGS:
+            acct = SavingsAccount(acct_num)
+        elif acct_type == CHECKING:
+            acct = CheckingAccount(acct_num)
+        else:
+            return None
 
-        # add account to bank's tracked accounts
-        self._accounts.append(acct)
+        self._accounts[acct_num] = acct
+        return self._accounts.get(acct_num)
 
-    def get_account_by_num(self, num: str) -> Account:
-        """Returns the account with the given num"""
-        for acct in self._accounts:
-            if acct.num_matches(num):
-                return acct
-        return None
+    def _generate_account_number(self) -> int:
+        return len(self._accounts) + 1
 
-    def _get_accounts(self) -> list:
-        """Return the accounts stored in the bank"""
-        return self._accounts
+    def _get_accounts(self) -> list[Account]:
+        """Getter method for accounts"""
+        return list(self._accounts.values())
+
+    accounts = property(_get_accounts)
+
+    def get_account(self, num: int) -> Account:
+        """Returns the account with the given account num
+
+        Args:
+            num (int): account number to check
+
+        Returns:
+            Account: Account with given number or None
+        """
+        return self._accounts.get(num)
 
     accounts = property(_get_accounts)

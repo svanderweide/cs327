@@ -30,25 +30,41 @@ class Transaction:
     def __str__(self) -> str:
         return f"{self._date}, ${self._amt:,.2f}"
 
-    def is_exempt(self):
+    def is_exempt(self) -> bool:
         """Check if transaction is exempt from limits"""
         return self._exempt
 
+    def _get_day(self) -> int:
+        """Getter for day of a transaction"""
+        return self._date.day
+
+    def _get_month(self) -> int:
+        """Getter for month of a transaction"""
+        return self._date.month
+
+    def _get_year(self) -> int:
+        """Getter for year of a transaction"""
+        return self._date.year
+
+    day = property(_get_day)
+    month = property(_get_month)
+    year = property(_get_year)
+
     def in_same_month(self, other):
         """Check if two transactions occur in same month"""
-        return self._date.year == other._date.year and self._date.month == other._date.month
+        return self.year == other.year and self.month == other.month
 
     def in_same_day(self, other):
         """Check if two transactions occur in the same day"""
-        return self._date.day == other._date.day and self.in_same_month(self, other)
+        return self.day == other.day and self.in_same_month(other)
 
     def __radd__(self, other):
         """Required for sum() with Transaction instances"""
         return other + self._amt
-    
+
     def check_balance(self, balance):
         """Checks if the Transaction would overdraw the balance given
-        
+
         Args:
             balance (Decimal): current balance
         """

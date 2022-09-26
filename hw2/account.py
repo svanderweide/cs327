@@ -18,48 +18,55 @@ class Account:
     def __init__(self, num: int) -> None:
         self._num = num
         self._transactions = []
+        self._interest_rate = Decimal(0)
+
+    def __str__(self) -> str:
+        """Formats the account's number and balance"""
+        return f"#{self._num:0>9},\tbalance: ${self._get_balance():,.2f}"
 
     def add_transaction(self, amt, *, date=None, exempt=False):
         """
         Creates a pending transaction with given amount and date
         and adds transaction to the account if allowed by account rules
-        
+
         Args:
             amt (str): amount of incoming transaction
             date (str, kw, default=None): date of incoming transaction
             exempt (bool, kw, default=False): exempt from account rules
         """
         # create transaction
-        t = Transaction(amt, date, exempt)
+        trans = Transaction(amt, date, exempt)
 
         # check account rules
-        bal_ok = self._check_balance(t)
-        lim_ok = self._check_limits(t)
+        bal_ok = self._check_balance(trans)
+        lim_ok = self._check_limits(trans)
 
-        if t.is_exempt() or (bal_ok and lim_ok):
-            self._transactions.append(t)
+        if trans.is_exempt() or (bal_ok and lim_ok):
+            self._transactions.append(trans)
 
-    def _check_balance(self, t: Transaction) -> bool:
+    def _check_balance(self, trans: Transaction) -> bool:
         """Checks whether an incoming transaction overdraws the balance
-        
+
         Args:
             t (Transaction): incoming transaction
 
         Returns:
             bool: False if account is overdrawn
         """
-        return t.check_balance(self.get_balance())
-    
-    def _check_limits(self, t: Transaction) -> bool:
-        return True
+        return trans.check_balance(self._get_balance())
 
-    def get_balance(self):
+    def _check_limits(self, trans1: Transaction) -> bool:
+        return trans1 is not None
+
+    def _get_balance(self):
         """Calculates the balance for an account by summing its transactions
-        
+
         Returns:
             Decimal: current balance
         """
         return sum(x for x in self._transactions)
+
+    balance = property(_get_balance)
 
     def interest_and_fees(self):
         """Calculate interest and fees for the account"""
@@ -69,19 +76,17 @@ class Account:
     def _interest(self):
         """Calculate interest for the current balance and add
         as a new transaction exempt from account limits"""
-        interest: Decimal = self.get_balance() * self._interest_rate
+        interest: Decimal = self._get_balance() * self._interest_rate
         self.add_transaction(interest, exempt=True)
-    
-    def __str__(self) -> str:
-        """Formats the account's number and balance
-        (e.g., '#000000001,\tbalance: $100.00)'
-        """
-        balance = self._get_balance()
-        return f"#{self._num:0>9},\tbalance: ${self.get_balance():,.2f}"
 
-    def get_transactions(self):
+    def _fees(self):
+        pass
+
+    def _get_transactions(self):
         """Returns sorted list of the account's transaction"""
         return sorted(self._transactions)
+
+    transactions = property(_get_transactions)
 
 
 class SavingsAccount(Account):
@@ -92,28 +97,28 @@ class SavingsAccount(Account):
         self._interest_rate = Decimal('0.029')
         self._day_lim = 2
         self._month_lim = 5
-    
-    def _check_limits(self, t1: Transaction) -> bool:
+
+    def __str__(self) -> str:
+        return "Savings" + super().__str__()
+
+    def _check_limits(self, trans1: Transaction) -> bool:
         """Checks if incoming transaction is allowed given account limits
-        
+
         Args:
-            t1 (Transaction): incoming transaction to be checked
+            trans (Transaction): incoming transaction to be checked
 
         Returns:
             bool: True if allowed, False if not allowed
         """
         same_day = 0
         same_month = 0
-        for t2 in self._transactions:
-            if not t2.is_exempt() and t2.in_same_day(t1):
+        for trans2 in self._transactions:
+            if not trans2.is_exempt() and trans2.in_same_day(trans1):
                 same_day += 1
-            if not t2.is_exempt() and t2.in_same_month(t1):
+            if not trans2.is_exempt() and trans2.in_same_month(trans1):
                 same_month += 1
-        
-        return same_day < self._day_lim and same_month < self._month_lim
 
-    def __str__(self) -> str:
-        return "Savings" + super().__str__()
+        return same_day < self._day_lim and same_month < self._month_lim
 
 
 class CheckingAccount(Account):
@@ -125,10 +130,10 @@ class CheckingAccount(Account):
         self._balance_threshold = Decimal(100)
         self._low_balance_fee = Decimal(-10)
 
-    def _fees(self):
-        """Adds a low-balance fee if balance below threshold"""
-        if self.get_balance() < self._balance_threshold:
-            self.add_transaction(self._low_balance_fee, exempt=True)
-
     def __str__(self) -> str:
         return "Checking" + super().__str__()
+
+    def _fees(self):
+        """Adds a low-balance fee if balance below threshold"""
+        if self._get_balance() < self._balance_threshold:
+            self.add_transaction(self._low_balance_fee, exempt=True)
