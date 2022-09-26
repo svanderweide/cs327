@@ -103,14 +103,16 @@ class Account:
         chronological partial ordering of transactions
         """
         newest = self._newest_trans()
-        if trans.is_exempt():
+        if newest is None:
+            return True
+        elif trans.is_exempt():
             return newest < trans
         else:
             return newest <= trans
 
     def _newest_trans(self) -> Transaction:
         """Returns most recent transaction on the account"""
-        return max(self.transactions)
+        return max(self.transactions, default=None)
     
     def _newest_end_of_month(self) -> str:
         """Returns string of date for end of month"""
