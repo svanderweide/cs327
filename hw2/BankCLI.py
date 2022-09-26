@@ -4,10 +4,15 @@ BankCLI module
 implements CLI for Bank interface
 """
 
+# general
 import sys
 from pickle import dump, load
-from decimal import InvalidOperation
 
+# required for parsing
+from datetime import datetime
+from decimal import Decimal, InvalidOperation
+
+# required for BankCLI
 from bank import Bank
 from account import Account, OverdrawError, TransactionLimitError
 
@@ -33,7 +38,7 @@ class CLI:
         """Display command options and run REPL"""
         while True:
             self._print_choices()
-            choice = self._input()
+            choice = self._parse_input()
             action = self._choices.get(choice)
             if action:
                 action()
@@ -61,17 +66,42 @@ class CLI:
               "8: load\n"
               "9: quit")
 
-    def _input(self, __prompt=None) -> str:
-        if __prompt:
-            print(__prompt)
-        print(">", end="")
-        return input()
+    def _parse_input(self, prompt=None, parse=str, exception=None, reprompt=None) -> str:
+        
+        # get user input with input()
+        if prompt:
+            print(prompt)
+        val = input(">")
+
+        # check for exception in parsing
+        if exception:
+            try:
+                # parse input string as instance of class cls
+                parse(val)
+            except exception:
+                # print secondary prompt if unable to parse
+                if reprompt:
+                    print(reprompt)
+                return self._parse_input(prompt, parse, exception, reprompt)
+        
+        return val
 
     def _add_account(self) -> None:
-        acct_type = self._input("Type of account? (checking/savings)")
-        acct_amnt = self._input("Initial deposit amount?")
+        acct_type = self._parse_input("Type of account? (checking/savings)")
+        acct_amnt = self._parse_input("Initial deposit amount?",
+                                      Decimal,
+                                      InvalidOperation,
+                                      "Please try again with a valid dollar amount.")
+
         acct = self._bank.add_account(acct_type)
-        acct.add_transaction(acct_amnt)
+
+        try:
+            acct.add_transaction(acct_amnt)
+        except AttributeError:
+            print("Account could not be created.")
+        except OverdrawError:
+            print("Account cannot be created with a negative initial balance.")
+            
 
     def _get_summary(self) -> None:
         accts = self._bank.accounts
@@ -79,8 +109,11 @@ class CLI:
             print(acct)
 
     def _set_account(self) -> None:
-        acct_num = self._input("Enter account number")
-        self._account = self._bank.get_account(int(acct_num))
+        acct_num = self._parse_input("Enter account number",
+                                     int,
+                                     ValueError,
+                                     "Please try again with a valid number.")
+        self._account = self._bank.get_account(acct_num)
 
     def _get_transactions(self) -> None:
         try:
@@ -91,17 +124,20 @@ class CLI:
             for transaction in transactions:
                 print(transaction)
 
-    def _add_transaction(self, *, amt=None, date=None) -> None:
-        trans_amt = self._input("Amount?") if amt is None else amt
-        trans_date = self._input("Date? (YYYY-MM-DD)") if date is None else date
+    def _add_transaction(self) -> None:
+        # get amount for transaction
+        trans_amt = self._parse_input("Amount?",
+                                      Decimal,
+                                      InvalidOperation,
+                                      "Please try again with a valid dollar amount.")
+        # get date for transaction
+        trans_date = self._parse_input("Date? (YYYY-MM-DD)",
+                                       datetime.fromisoformat,
+                                       ValueError,
+                                       "Please try again with a valid date in the format YYYY-MM-DD.")
+        # add transaction to account (check for exceptions)
         try:
             self._account.add_transaction(trans_amt, date=trans_date)
-        except InvalidOperation:
-            print("Please try again with a valid dollar amount.")
-            self._add_transaction(date=trans_date)
-        except ValueError:
-            print("Please try again with a valid date in the format YYYY-MM-DD.")
-            self._add_transaction(amt=trans_amt)
         except AttributeError:
             print("This command requires that you first select an account.")
         except OverdrawError:
@@ -109,11 +145,13 @@ class CLI:
         except TransactionLimitError:
             print("This transaction could not be completed because the account has reached a transaction limit.")
 
+
     def _interest_and_fees(self) -> None:
         try:
             self._account.interest_and_fees()
         except AttributeError:
             print("This command requires that you first select an account.")
+
 
     def _save(self) -> None:
         with open("bank.pickle", "wb") as file:

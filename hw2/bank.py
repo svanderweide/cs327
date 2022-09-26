@@ -46,15 +46,15 @@ class Bank:
 
     accounts = property(_get_accounts)
 
-    def get_account(self, num: int) -> Account:
+    def get_account(self, num: str) -> Account:
         """Returns the account with the given account num
 
         Args:
-            num (int): account number to check
+            num (str): account number to check
 
         Returns:
             Account: Account with given number or None
         """
-        return self._accounts.get(num)
+        return self._accounts.get(int(num))
 
     accounts = property(_get_accounts)
