@@ -4,6 +4,7 @@ bank module
 implements Bank class to aggregate Accounts
 """
 
+import logging
 from account import Account, SavingsAccount, CheckingAccount
 
 # constants for pattern matching
@@ -33,6 +34,8 @@ class Bank:
             acct = CheckingAccount(acct_num)
         else:
             return None
+
+        logging.debug(f"Created account: {acct_num}")
 
         self._accounts[acct_num] = acct
         return self._accounts.get(acct_num)

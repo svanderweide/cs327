@@ -16,6 +16,15 @@ from decimal import Decimal, InvalidOperation
 from bank import Bank
 from account import Account, OverdrawError, TransactionLimitError, TransactionSequenceError
 
+# required for logging
+import logging
+
+# basic logging config
+logging.basicConfig(filename="bank.log",
+                    level=logging.DEBUG,
+                    format="%(asctime)s|%(levelname)s|%(message)s",
+                    datefmt="%Y-%m-%d %I:%M:%S")
+
 class CLI:
     """Display a CLI and respond to commands"""
 
@@ -44,6 +53,7 @@ class CLI:
                 action()
         except Exception as e:
             print("Sorry! Something unexpected happened. If this problem persists please contact our support team for assistance.")
+            logging.error(f"{type(e).__name__}: {str(e)}")
 
 
     def _print_account(self) -> None:
@@ -156,11 +166,14 @@ class CLI:
             print("This command requires that you first select an account.")
         except TransactionSequenceError as e:
             print(f"Cannot apply interest and fees again in the month of {e.latest_date.strftime('%B')}.")
+        else:
+            logging.debug("Triggered fees and interest")
 
 
     def _save(self) -> None:
         with open("bank.pickle", "wb") as file:
             dump(self._bank, file)
+        logging.debug("Saved to bank.pickle")
 
 
     def _load(self) -> None:
@@ -171,6 +184,8 @@ class CLI:
             print("This command requires you to save the bank before loading.")
         else:
             self._account = None
+        finally:
+            logging.debug("Loaded from bank.pickle")
 
     def _quit(self):
         sys.exit(0)

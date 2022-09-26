@@ -9,6 +9,7 @@ classes:
     checking: checking account (higher interest, fees)
 """
 
+import logging
 from decimal import Decimal
 from datetime import date
 from calendar import monthrange
@@ -74,6 +75,8 @@ class Account:
         lim_ok = self._check_limits(trans)
         seq_ok = self._check_sequence(trans)
 
+        logging.debug(f"Created transaction, {self._num}, {amt}")
+        
         if trans.is_exempt() and seq_ok:
             self._transactions.append(trans)
         elif not bal_ok:
@@ -84,6 +87,7 @@ class Account:
             raise TransactionSequenceError(self._newest_trans()._date)
         else:
             self._transactions.append(trans)
+        
 
     def _check_balance(self, trans: Transaction) -> bool:
         """Checks whether an incoming transaction overdraws the balance
