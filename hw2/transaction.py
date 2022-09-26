@@ -5,7 +5,10 @@ implements Transaction class to store transaction information
 """
 
 from datetime import datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import setcontext, BasicContext, Decimal
+
+# set Decimal context for rounding
+setcontext(BasicContext)
 
 class Transaction:
     """Represents an individual transaction"""
