@@ -9,108 +9,126 @@ classes:
     checking: checking account (higher interest, fees)
 """
 
-import datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from transaction import Transaction
 
 class Account:
-    """Contains information related to a bank account"""
+    """Abstract class for account subclasses"""
 
     def __init__(self, num: int) -> None:
-        """Initializes class attributes"""
-
         self._num = num
         self._transactions = []
-        self._balance = Decimal(0)
-        self._interest_rate = Decimal(0)
 
-    def num_matches(self, num: str) -> bool:
-        """Check if this account has the given num"""
-        return self._num == int(num)
-
-    def add_transaction(self, amnt: str, date: str):
+    def add_transaction(self, amt, *, date=None, exempt=False):
         """
-        Add a transaction to an account at a bank
-        (if it is a valnum transaction for the account)
-
+        Creates a pending transaction with given amount and date
+        and adds transaction to the account if allowed by account rules
+        
         Args:
-            amnt (str): amount of transaction
-            date (str): date of transaction
+            amt (str): amount of incoming transaction
+            date (str, kw, default=None): date of incoming transaction
+            exempt (bool, kw, default=False): exempt from account rules
         """
-        if self._validate_transaction(amnt, date):
-            self._add_transaction(amnt, date, False)
+        # create transaction
+        t = Transaction(amt, date, exempt)
 
-    def add_interest(self) -> None:
-        """Add transactions for interest (and fees) on balance"""
-        amnt = self._balance * self._interest_rate
-        date = datetime.date.today().isoformat()
-        self._add_transaction(amnt, date, True)
+        # check account rules
+        bal_ok = self._check_balance(t)
+        lim_ok = self._check_limits(t)
 
-    def _get_transactions(self) -> list:
-        """Return transactions"""
-        return self._transactions
+        if t.is_exempt() or (bal_ok and lim_ok):
+            self._transactions.append(t)
 
-    transactions = property(_get_transactions)
+    def _check_balance(self, t: Transaction) -> bool:
+        """Checks whether an incoming transaction overdraws the balance
+        
+        Args:
+            t (Transaction): incoming transaction
 
-    def _get_balance(self) -> Decimal:
-        return self._balance.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        Returns:
+            bool: False if account is overdrawn
+        """
+        return t.check_balance(self.get_balance())
+    
+    def _check_limits(self, t: Transaction) -> bool:
+        return True
 
-    def _add_transaction(self, amnt, date, automated) -> None:
-        new_transaction = Transaction(amnt, date, automated)
-        self._transactions.append(new_transaction)
-        self._balance += Decimal(amnt)
+    def get_balance(self):
+        """Calculates the balance for an account by summing its transactions
+        
+        Returns:
+            Decimal: current balance
+        """
+        return sum(x for x in self._transactions)
 
-    def _validate_transaction(self, amnt, date) -> bool:
-        return self._balance < 0 or self._balance + Decimal(amnt) >= 0
+    def interest_and_fees(self):
+        """Calculate interest and fees for the account"""
+        self._interest()
+        self._fees()
 
-class Savings(Account):
+    def _interest(self):
+        """Calculate interest for the current balance and add
+        as a new transaction exempt from account limits"""
+        interest: Decimal = self.get_balance() * self._interest_rate
+        self.add_transaction(interest, exempt=True)
+    
+    def __str__(self) -> str:
+        """Formats the account's number and balance
+        (e.g., '#000000001,\tbalance: $100.00)'
+        """
+        balance = self._get_balance()
+        return f"#{self._num:0>9},\tbalance: ${self.get_balance():,.2f}"
+
+    def get_transactions(self):
+        """Returns sorted list of the account's transaction"""
+        return sorted(self._transactions)
+
+
+class SavingsAccount(Account):
     """Account subclass for Savings account"""
 
     def __init__(self, num: int) -> None:
         super().__init__(num)
         self._interest_rate = Decimal('0.029')
+        self._day_lim = 2
+        self._month_lim = 5
+    
+    def _check_limits(self, t1: Transaction) -> bool:
+        """Checks if incoming transaction is allowed given account limits
+        
+        Args:
+            t1 (Transaction): incoming transaction to be checked
+
+        Returns:
+            bool: True if allowed, False if not allowed
+        """
+        same_day = 0
+        same_month = 0
+        for t2 in self._transactions:
+            if not t2.is_exempt() and t2.in_same_day(t1):
+                same_day += 1
+            if not t2.is_exempt() and t2.in_same_month(t1):
+                same_month += 1
+        
+        return same_day < self._day_lim and same_month < self._month_lim
 
     def __str__(self) -> str:
-        """Returns string representation of savings account"""
-        balance = self._get_balance()
-        return f"Savings#{self._num:0>9},\tbalance: ${balance:,}"
-
-    def _validate_transaction(self, amnt: str, date: str) -> bool:
-
-        # temporary transaction
-        tmp = Transaction(amnt, date)
-
-        # count transactions with same day and month
-        same_month = 0
-        same_day = 0
-        for transaction in self._transactions:
-            if not transaction.automated:
-                if tmp.same_month(transaction):
-                    same_month += 1
-                    if tmp.same_day(transaction):
-                        same_day += 1
-
-        # savings account-specific valnumation
-        if same_day < 2 and same_month < 5:
-            return super()._validate_transaction(amnt, date)
-        return False
+        return "Savings" + super().__str__()
 
 
-class Checking(Account):
+class CheckingAccount(Account):
     """Account subclass for Checking account"""
 
     def __init__(self, num: int) -> None:
         super().__init__(num)
         self._interest_rate = Decimal('0.0012')
+        self._balance_threshold = Decimal(100)
+        self._low_balance_fee = Decimal(-10)
+
+    def _fees(self):
+        """Adds a low-balance fee if balance below threshold"""
+        if self.get_balance() < self._balance_threshold:
+            self.add_transaction(self._low_balance_fee, exempt=True)
 
     def __str__(self) -> str:
-        """Returns string representation of checking account"""
-        balance = self._get_balance()
-        return f"Checking#{self._num:0>9},\tbalance: ${balance:,}"
-
-    def add_interest(self) -> None:
-        """Add transactions for interest (and fees) on balance"""
-        super().add_interest()
-        if self._balance < Decimal('100'):
-            date = datetime.date.today().isoformat()
-            self._add_transaction('-10', date, False)
+        return "Checking" + super().__str__()

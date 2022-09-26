@@ -16,8 +16,8 @@ class Transaction:
     def __init__(self, amt, date=None, exempt=False) -> None:
         """
         Args:
-            amt (string): dollar amount of transaction
-            date (string, default=None): date in ISO format (YYYY-MM-DD)
+            amt (str): dollar amount of transaction
+            date (str, default=None): date in ISO format (YYYY-MM-DD)
             exempt (bool, default=False): exempt from account limits
         """
         self._amt = Decimal(amt)
