@@ -40,7 +40,7 @@ class Account:
 
     balance = property(_get_balance)
 
-    def _get_transactions(self):
+    def _get_transactions(self) -> list:
         """Returns sorted list of the account's transaction"""
         return sorted(self._transactions)
 

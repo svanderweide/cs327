@@ -40,7 +40,7 @@ class Bank:
     def _generate_account_number(self) -> int:
         return len(self._accounts) + 1
 
-    def _get_accounts(self) -> list[Account]:
+    def _get_accounts(self) -> list:
         """Getter method for accounts"""
         return list(self._accounts.values())
 
