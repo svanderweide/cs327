@@ -14,7 +14,7 @@ class Bank:
     """Contains information about accounts at a bank"""
 
     def __init__(self) -> None:
-        self._accounts: dict[Account] = {}
+        self._accounts: dict = {}
 
     def add_account(self, acct_type: str) -> Account:
         """Creates and adds an account to the bank
