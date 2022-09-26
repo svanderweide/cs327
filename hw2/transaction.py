@@ -71,5 +71,7 @@ class Transaction:
         return self._amt >= 0 or balance > abs(self._amt)
 
     def __lt__(self, other):
-        """Compares Transactions by date"""
         return self._date < other._date
+
+    def __le__(self, other):
+        return self._date <= other._date

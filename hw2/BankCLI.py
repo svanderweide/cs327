@@ -14,7 +14,7 @@ from decimal import Decimal, InvalidOperation
 
 # required for BankCLI
 from bank import Bank
-from account import Account, OverdrawError, TransactionLimitError
+from account import Account, OverdrawError, TransactionLimitError, TransactionSequenceError
 
 class CLI:
     """Display a CLI and respond to commands"""
@@ -144,6 +144,8 @@ class CLI:
             print("This transaction could not be completed due to an insufficient account balance.")
         except TransactionLimitError:
             print("This transaction could not be completed because the account has reached a transaction limit.")
+        except TransactionSequenceError as e:
+            print(f"New transactions must be from {e.latest_date} onward.")
 
 
     def _interest_and_fees(self) -> None:
@@ -151,6 +153,8 @@ class CLI:
             self._account.interest_and_fees()
         except AttributeError:
             print("This command requires that you first select an account.")
+        except TransactionSequenceError as e:
+            print(f"Cannot apply interest and fees again in the month of {e.latest_date.strftime('%B')}.")
 
 
     def _save(self) -> None:

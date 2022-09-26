@@ -10,6 +10,8 @@ classes:
 """
 
 from decimal import Decimal
+from datetime import date
+from calendar import monthrange
 from transaction import Transaction
 
 class OverdrawError(Exception):
@@ -17,6 +19,13 @@ class OverdrawError(Exception):
 
 class TransactionLimitError(Exception):
     """Custom exception to handle invalid transactions on Savings accounts"""
+
+class TransactionSequenceError(Exception):
+    """Custom exception to enforce chronological ordering of transactions"""
+
+    def __init__(self, latest_date):
+        super().__init__()
+        self.latest_date = latest_date
 
 class Account:
     """Abstract class for account subclasses"""
@@ -62,13 +71,16 @@ class Account:
         # check account rules
         bal_ok = self._check_balance(trans)
         lim_ok = self._check_limits(trans)
+        seq_ok = self._check_sequence(trans)
 
-        if trans.is_exempt():
+        if trans.is_exempt() and seq_ok:
             self._transactions.append(trans)
         elif not bal_ok:
             raise OverdrawError
         elif not lim_ok:
             raise TransactionLimitError
+        elif not seq_ok:
+            raise TransactionSequenceError(self._newest_trans()._date)
         else:
             self._transactions.append(trans)
 
@@ -85,6 +97,32 @@ class Account:
 
     def _check_limits(self, trans1: Transaction) -> bool:
         return trans1 is not None
+    
+    def _check_sequence(self, trans: Transaction) -> bool:
+        """Checks whether incoming transaction satisfies
+        chronological partial ordering of transactions
+        """
+        newest = self._newest_trans()
+        if trans.is_exempt():
+            return newest < trans
+        else:
+            return newest <= trans
+
+    def _newest_trans(self) -> Transaction:
+        """Returns most recent transaction on the account"""
+        return max(self.transactions)
+    
+    def _newest_end_of_month(self) -> str:
+        """Returns string of date for end of month"""
+        # get newest transaction
+        newest = self._newest_trans()
+
+        # calculate date attributes
+        year = newest.year
+        month = newest.month
+        day = monthrange(year, month)[1]
+
+        return date(year, month, day).isoformat()
 
     def interest_and_fees(self) -> None:
         """Calculate interest and fees for the account"""
@@ -94,8 +132,9 @@ class Account:
     def _interest(self) -> None:
         """Calculate interest for the current balance and add
         as a new transaction exempt from account limits"""
-        interest: Decimal = self._get_balance() * self._interest_rate
-        self.add_transaction(interest, exempt=True)
+        interest = self._get_balance() * self._interest_rate
+        date = self._newest_end_of_month()
+        self.add_transaction(interest, date=date, exempt=True)
 
     def _fees(self) -> None:
         pass
@@ -148,4 +187,5 @@ class CheckingAccount(Account):
     def _fees(self) -> None:
         """Adds a low-balance fee if balance below threshold"""
         if self._get_balance() < self._balance_threshold:
-            self.add_transaction(self._low_balance_fee, exempt=True)
+            date = self._newest_end_of_month()
+            self.add_transaction(self._low_balance_fee, date=date, exempt=True)
