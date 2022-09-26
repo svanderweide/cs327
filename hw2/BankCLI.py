@@ -36,14 +36,15 @@ class CLI:
 
     def run(self) -> None:
         """Display command options and run REPL"""
-        while True:
-            self._print_choices()
-            choice = self._parse_input()
-            action = self._choices.get(choice)
-            if action:
+        try:
+            while True:
+                self._print_choices()
+                choice = self._parse_input()
+                action = self._choices.get(choice)
                 action()
-            else:
-                print(f"{choice} is not a valid choice\n")
+        except Exception as e:
+            print("Sorry! Something unexpected happened. If this problem persists please contact our support team for assistance.")
+
 
     def _print_account(self) -> None:
         print("Currently selected account: ", end="")
@@ -151,8 +152,8 @@ class CLI:
     def _interest_and_fees(self) -> None:
         try:
             self._account.interest_and_fees()
-        except AttributeError:
-            print("This command requires that you first select an account.")
+        # except AttributeError:
+        #     print("This command requires that you first select an account.")
         except TransactionSequenceError as e:
             print(f"Cannot apply interest and fees again in the month of {e.latest_date.strftime('%B')}.")
 

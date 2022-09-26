@@ -34,6 +34,7 @@ class Account:
         self._num = num
         self._transactions = []
         self._interest_rate = Decimal(0)
+        self._exempt_allowed = 1
 
     def __str__(self) -> str:
         """Formats the account's number and balance"""
@@ -100,31 +101,35 @@ class Account:
     
     def _check_sequence(self, trans: Transaction) -> bool:
         """Checks whether incoming transaction satisfies
-        chronological partial ordering of transactions
+        chronological (partial/total) ordering of transactions
         """
         newest = self._newest_trans()
         if newest is None:
             return True
-        elif trans.is_exempt():
-            return newest < trans
-        else:
+        elif not trans.is_exempt():
             return newest <= trans
+        else:
+            num_exempt = self._exempt_on_date(newest.date)
+            return num_exempt < self._exempt_allowed
+
+    def _exempt_on_date(self, date: date) -> int:
+        return len([t for t in self.transactions if t.is_exempt() and t.date == date])
 
     def _newest_trans(self) -> Transaction:
         """Returns most recent transaction on the account"""
         return max(self.transactions, default=None)
     
-    def _newest_end_of_month(self) -> str:
+    def _newest_end_of_month(self) -> date:
         """Returns string of date for end of month"""
         # get newest transaction
         newest = self._newest_trans()
 
         # calculate date attributes
-        year = newest.year
-        month = newest.month
+        year = newest.date.year
+        month = newest.date.month
         day = monthrange(year, month)[1]
 
-        return date(year, month, day).isoformat()
+        return date(year, month, day)
 
     def interest_and_fees(self) -> None:
         """Calculate interest and fees for the account"""
@@ -135,7 +140,7 @@ class Account:
         """Calculate interest for the current balance and add
         as a new transaction exempt from account limits"""
         interest = self._get_balance() * self._interest_rate
-        date = self._newest_end_of_month()
+        date = self._newest_end_of_month().isoformat()
         self.add_transaction(interest, date=date, exempt=True)
 
     def _fees(self) -> None:
@@ -163,14 +168,9 @@ class SavingsAccount(Account):
         Returns:
             bool: True if allowed, False if not allowed
         """
-        same_day = 0
-        same_month = 0
-        for trans2 in self._transactions:
-            if not trans2.is_exempt() and trans2.in_same_day(trans1):
-                same_day += 1
-            if not trans2.is_exempt() and trans2.in_same_month(trans1):
-                same_month += 1
-
+        non_exempts = [trans for trans in self._transactions if not trans.is_exempt()]
+        same_day = len([t2 for t2 in non_exempts if trans1.same_day(t2)])
+        same_month = len([t2 for t2 in non_exempts if trans1.same_month(t2)])
         return same_day < self._day_lim and same_month < self._month_lim
 
 
@@ -182,6 +182,7 @@ class CheckingAccount(Account):
         self._interest_rate = Decimal('0.0012')
         self._balance_threshold = Decimal(100)
         self._low_balance_fee = Decimal(-10)
+        self._exempt_allowed = 2
 
     def __str__(self) -> str:
         return "Checking" + super().__str__()
@@ -189,5 +190,5 @@ class CheckingAccount(Account):
     def _fees(self) -> None:
         """Adds a low-balance fee if balance below threshold"""
         if self._get_balance() < self._balance_threshold:
-            date = self._newest_end_of_month()
+            date = self._newest_end_of_month().isoformat()
             self.add_transaction(self._low_balance_fee, date=date, exempt=True)

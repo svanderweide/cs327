@@ -4,7 +4,7 @@ transaction module
 implements Transaction class to store transaction information
 """
 
-from datetime import datetime
+from datetime import datetime, date
 from decimal import setcontext, BasicContext, Decimal
 
 # set Decimal context for rounding
@@ -34,29 +34,23 @@ class Transaction:
         """Check if transaction is exempt from limits"""
         return self._exempt
 
-    def _get_day(self) -> int:
-        """Getter for day of a transaction"""
-        return self._date.day
+    def _get_date(self) -> date:
+        """Getter for date of a transaction"""
+        return self._date
 
-    def _get_month(self) -> int:
-        """Getter for month of a transaction"""
-        return self._date.month
+    date = property(_get_date)
 
-    def _get_year(self) -> int:
-        """Getter for year of a transaction"""
-        return self._date.year
+    def same_year(self, other):
+        """Check if two transactions occur in same year"""
+        return self.date.year == other.date.year
 
-    day = property(_get_day)
-    month = property(_get_month)
-    year = property(_get_year)
-
-    def in_same_month(self, other):
+    def same_month(self, other):
         """Check if two transactions occur in same month"""
-        return self.year == other.year and self.month == other.month
+        return self.date.month == other.date.month and self.same_year(other)
 
-    def in_same_day(self, other):
+    def same_day(self, other):
         """Check if two transactions occur in the same day"""
-        return self.day == other.day and self.in_same_month(other)
+        return self.date.day == other.date.day and self.same_month(other)
 
     def __radd__(self, other):
         """Required for sum() with Transaction instances"""
