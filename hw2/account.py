@@ -77,8 +77,12 @@ class Account:
 
         logging.debug(f"Created transaction, {self._num}, {amt}")
         
-        if trans.is_exempt() and seq_ok:
-            self._transactions.append(trans)
+        if trans.is_exempt():
+            if seq_ok:
+                print(f"trans is exempt and seq = {seq_ok}")
+                self._transactions.append(trans)
+            else:
+                raise TransactionSequenceError(self._newest_trans()._date)
         elif not bal_ok:
             raise OverdrawError
         elif not lim_ok:
@@ -172,7 +176,7 @@ class SavingsAccount(Account):
         Returns:
             bool: True if allowed, False if not allowed
         """
-        non_exempts = [trans for trans in self._transactions if not trans.is_exempt()]
+        non_exempts = [t for t in self._transactions if not t.is_exempt()]
         same_day = len([t2 for t2 in non_exempts if trans1.same_day(t2)])
         same_month = len([t2 for t2 in non_exempts if trans1.same_month(t2)])
         return same_day < self._day_lim and same_month < self._month_lim
