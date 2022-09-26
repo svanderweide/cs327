@@ -79,7 +79,6 @@ class Account:
         
         if trans.is_exempt():
             if seq_ok:
-                print(f"trans is exempt and seq = {seq_ok}")
                 self._transactions.append(trans)
             else:
                 raise TransactionSequenceError(self._newest_trans()._date)
