@@ -75,8 +75,6 @@ class Account:
         lim_ok = self._check_limits(trans)
         seq_ok = self._check_sequence(trans)
 
-        logging.debug(f"Created transaction, {self._num}, {amt}")
-        
         if trans.is_exempt():
             if seq_ok:
                 self._transactions.append(trans)
@@ -90,6 +88,8 @@ class Account:
             raise TransactionSequenceError(self._newest_trans()._date)
         else:
             self._transactions.append(trans)
+
+        logging.debug(f"Created transaction, {self._num}, {amt}")
         
 
     def _check_balance(self, trans: Transaction) -> bool:

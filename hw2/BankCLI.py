@@ -184,7 +184,6 @@ class CLI:
             print("This command requires you to save the bank before loading.")
         else:
             self._account = None
-        finally:
             logging.debug("Loaded from bank.pickle")
 
     def _quit(self):
