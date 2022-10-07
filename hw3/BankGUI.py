@@ -117,9 +117,9 @@ class GUI:
             except InvalidOperation:
                 err_msg = "Please try again with a valid dollar amount."
                 messagebox.showwarning("WARNING", err_msg)
-            except AttributeError:
-                err_msg = "New account could not be created."
-                messagebox.showwarning("WARNING", err_msg)
+            # except AttributeError:
+            #     err_msg = "New account could not be created."
+            #     messagebox.showwarning("WARNING", err_msg)
             except OverdrawError:
                 err_msg = "New account cannot have negative initial balance."
                 messagebox.showwarning("WARNING", err_msg)
