@@ -5,4 +5,4 @@ from sqlalchemy.ext.declarative import declarative_base
 
 # configure SQL information
 Base = declarative_base()
-DATABASE = "sqlite:///bank.sqlite"
+DATABASE = "sqlite:///bank.db"

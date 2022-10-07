@@ -17,6 +17,7 @@ from tkcalendar import Calendar
 # SQL modules
 from db import Base, DATABASE
 from sqlalchemy import create_engine
+from sqlalchemy.orm.session import sessionmaker
 
 # custom modules
 from bank import Bank
@@ -34,8 +35,18 @@ class GUI:
 
     def __init__(self):
 
+        self._session = Session()
+
+        self._bank: Bank = self._session.query(Bank).first()
+        if self._bank is None:
+            self._bank = Bank()
+            self._session.add(self._bank)
+            self._session.commit()
+            logging.debug("Saved to bank.db")
+        else:
+            logging.debug("Loaded from bank.db")
+
         self._account: Account = None
-        self._bank: Bank = Bank()
 
         # main tkinter window with title
         self._window = tk.Tk()
@@ -75,16 +86,8 @@ class GUI:
                   text="interest and fees",
                   command=self._interest_and_fees).grid(row=0, column=2)
 
-        tk.Button(self._frames["commands"],
-                  text="save",
-                  command=self._save).grid(row=0, column=3)
-
-        tk.Button(self._frames["commands"],
-                  text="load",
-                  command=self._load).grid(row=0, column=4)
-
         # frame for user-input entries
-        self._frames["input"] = tk.LabelFrame(self._window)
+        self._frames["input"] = tk.LabelFrame(self._frames["main"])
         self._frames["input"].grid(row=2, pady=10)
 
         # frame for holding accounts and transaction frames
@@ -108,6 +111,8 @@ class GUI:
         self._transactions_listbox = tk.Listbox(self._frames["transactions"])
         self._transactions_listbox.pack()
 
+        self._show_accounts()
+
         self._window.mainloop()
 
     def _clean_input_frame(self) -> None:
@@ -122,11 +127,11 @@ class GUI:
         def open_callback() -> None:
 
             # adding an account cannot raise an exception
-            acct = self._bank.add_account(options.get())
+            acct = self._bank.add_account(options.get(), self._session)
 
             # adding a transaction can raise exceptions
             try:
-                acct.add_transaction(amt_sel.get())
+                acct.add_transaction(amt_sel.get(), self._session)
             except InvalidOperation:
                 err_msg = "Please try again with a valid dollar amount."
                 messagebox.showwarning("WARNING", err_msg)
@@ -206,7 +211,9 @@ class GUI:
         def add_callback() -> None:
             # adding a transaction can raise exceptions
             try:
-                self._account.add_transaction(amt_sel.get(), date=date_sel.get_date())
+                self._account.add_transaction(amt_sel.get(),
+                                              self._session,
+                                              date=date_sel.get_date())
             except InvalidOperation:
                 err_msg = "Please try again with a valid dollar amount."
                 messagebox.showwarning("WARNING", err_msg)
@@ -253,7 +260,7 @@ class GUI:
 
     def _interest_and_fees(self) -> None:
         try:
-            self._account.interest_and_fees()
+            self._account.interest_and_fees(self._session)
         except AttributeError:
             err_msg = "This command requires that you first select an account."
             messagebox.showwarning("WARNING", err_msg)
@@ -265,23 +272,11 @@ class GUI:
         finally:
             self._show_accounts()
 
-    def _save(self) -> None:
-        with open("bank.pickle", "wb") as file:
-            dump(self._bank, file)
-        logging.debug("Saved to bank.pickle")
-
-    def _load(self) -> None:
-        try:
-            with open("bank.pickle", "rb") as file:
-                self._bank = load(file)
-        except FileNotFoundError:
-            print("This command requires you to save the bank before loading.")
-        else:
-            self._account = None
-            logging.debug("Loaded from bank.pickle")
-        self._show_accounts()
-
 if __name__ == "__main__":
     engine = create_engine(DATABASE)
     Base.metadata.create_all(engine)
+
+    Session = sessionmaker()
+    Session.configure(bind=engine)
+
     GUI()

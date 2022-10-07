@@ -6,10 +6,9 @@ implements Transaction class to store transaction information
 
 from datetime import datetime, date
 from decimal import setcontext, BasicContext, Decimal
-from sqlite3 import Date
 
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import Column, ForeignKey, Integer, Float, Boolean, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, Float, Boolean, Date
 
 from db import Base
 
@@ -23,7 +22,7 @@ class Transaction(Base):
 
     _id = Column(Integer, primary_key=True)
     _amt = Column(Float)
-    _date = Column(DateTime)
+    _date = Column(Date)
     _exempt = Column(Boolean)
     _account_num = Column(Integer, ForeignKey("account._num"))
 

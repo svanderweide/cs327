@@ -15,7 +15,7 @@ from datetime import date
 from calendar import monthrange
 from transaction import Transaction
 
-from sqlalchemy import ForeignKey, Column, Integer, Float, Boolean, JSON
+from sqlalchemy import ForeignKey, Column, Integer, Float, String
 from sqlalchemy.orm import relationship, backref
 
 from db import Base
@@ -41,9 +41,9 @@ class Account(Base):
     _num = Column(Integer, primary_key=True)
     _transactions = relationship("Transaction", backref=backref("account"))
     _interest_rate = Column(Float)
-    _interest_triggered = Column(Boolean)
+    _interest_triggered = Column(Integer)
     _bank_id = Column(Integer, ForeignKey("bank._id"))
-    _type = Column(Boolean)
+    _type = Column(String(10))
 
     __mapper_args__ = {
         "polymorphic_identity": "account",
@@ -52,7 +52,7 @@ class Account(Base):
 
     def __init__(self, num: int) -> None:
         self._num = num
-        self._interest_rate = Decimal(0)
+        self._interest_rate = 0
         self._interest_triggered = False
 
     def __str__(self) -> str:
@@ -75,7 +75,7 @@ class Account(Base):
 
     transactions = property(_get_transactions)
 
-    def add_transaction(self, amt, *, date=None, exempt=False) -> None:
+    def add_transaction(self, amt, session, *, date=None, exempt=False) -> None:
         """
         Creates a pending transaction with given amount and date
         and adds transaction to the account if allowed by account rules
@@ -97,11 +97,8 @@ class Account(Base):
         newest = self._newest_trans()
 
         # exempt transactions only care about sequence errors
-        if trans.is_exempt():
-            if seq_ok:
-                self._transactions.append(trans)
-            else:
-                raise TransactionSequenceError(newest.date)
+        if trans.is_exempt() and not seq_ok:
+            raise TransactionSequenceError(newest.date)
         # non-exempt transactions care about all errors
         elif not bal_ok:
             raise OverdrawError
@@ -110,13 +107,19 @@ class Account(Base):
         elif not seq_ok:
             raise TransactionSequenceError(newest._date)
         else:
-            # if transaction enters new month, enable interest/fees
+            # if non-exempt transaction enters new month, enable interest/fees
             if newest is not None and trans.date > self._newest_end_of_month():
                 self._interest_triggered = False
-            # include transaction
-            self._transactions.append(trans)
-
+                session.add(self)
+        
+        # include transaction
+        self._transactions.append(trans)
+        session.add(trans)
         logging.debug(f"Created transaction, {self._num}, {amt}")
+
+        session.commit()
+        logging.debug("Saved to bank.db")
+
 
     def _check_balance(self, trans: Transaction) -> bool:
         """Checks whether an incoming transaction overdraws the balance
@@ -166,21 +169,31 @@ class Account(Base):
 
         return date(year, month, day)
 
-    def interest_and_fees(self) -> None:
+    def interest_and_fees(self, session) -> None:
         """Calculate interest and fees for the account"""
-        self._interest()
-        self._fees()
+        self._interest(session)
+        self._fees(session)
         self._interest_triggered = True
+        session.add(self)
+        session.commit()
 
-    def _interest(self) -> None:
+    def _interest(self, session) -> None:
         """Calculate interest for the current balance and add
         as a new transaction exempt from account limits"""
-        interest = self._get_balance() * self._interest_rate
+        interest = self._get_balance() * Decimal(self._interest_rate)
         interest_date = self._newest_end_of_month().isoformat()
-        self.add_transaction(interest, date=interest_date, exempt=True)
+        self.add_transaction(interest,
+                             session,
+                             date=interest_date,
+                             exempt=True)
 
-    def _fees(self) -> None:
+    def _fees(self, session) -> None:
         pass
+
+    def _get_num(self) -> None:
+        return self._num
+
+    num = property(_get_num)
 
 
 class SavingsAccount(Account):
@@ -192,9 +205,13 @@ class SavingsAccount(Account):
     _day_lim = Column(Integer)
     _month_lim = Column(Integer)
 
+    __mapper_args__ = {
+        "polymorphic_identity": "savingsaccount"
+    }
+
     def __init__(self, num: int) -> None:
         super().__init__(num)
-        self._interest_rate = Decimal('0.029')
+        self._interest_rate = 0.029
         self._day_lim = 2
         self._month_lim = 5
 
@@ -225,17 +242,24 @@ class CheckingAccount(Account):
     _balance_threshold = Column(Integer)
     _low_balance_fee = Column(Integer)
 
+    __mapper_args__ = {
+        "polymorphic_identity": "checkingaccount"
+    }
+
     def __init__(self, num: int) -> None:
         super().__init__(num)
-        self._interest_rate = Decimal('0.0012')
-        self._balance_threshold = Decimal(100)
-        self._low_balance_fee = Decimal(-10)
+        self._interest_rate = 0.0012
+        self._balance_threshold = 100
+        self._low_balance_fee = -10
 
     def __str__(self) -> str:
         return "Checking" + super().__str__()
 
-    def _fees(self) -> None:
+    def _fees(self, session) -> None:
         """Adds a low-balance fee if balance below threshold"""
-        if self._get_balance() < self._balance_threshold:
+        if self._get_balance() < Decimal(self._balance_threshold):
             fees_date = self._newest_end_of_month().isoformat()
-            self.add_transaction(self._low_balance_fee, date=fees_date, exempt=True)
+            self.add_transaction(Decimal(self._low_balance_fee),
+                                 session,
+                                 date=fees_date,
+                                 exempt=True)

@@ -24,10 +24,7 @@ class Bank(Base):
     _id = Column(Integer, primary_key=True)
     _accounts = relationship("Account", backref=backref("bank"))
 
-    # def __init__(self) -> None:
-    #     self._accounts: dict = {}
-
-    def add_account(self, acct_type: str) -> Account:
+    def add_account(self, acct_type, session) -> Account:
         """Creates and adds an account to the bank
 
         Args:
@@ -47,15 +44,18 @@ class Bank(Base):
 
         logging.debug(f"Created account: {acct_num}")
 
-        self._accounts[acct_num] = acct
-        return self._accounts.get(acct_num)
+        self._accounts.append(acct)
+        session.add(acct)
+        session.commit()
+        logging.debug("Saved to bank.db")
+        return acct
 
     def _generate_account_number(self) -> int:
         return len(self._accounts) + 1
 
     def _get_accounts(self) -> list:
         """Getter method for accounts"""
-        return list(self._accounts.values())
+        return self._accounts
 
     accounts = property(_get_accounts)
 
@@ -68,6 +68,7 @@ class Bank(Base):
         Returns:
             Account: Account with given number or None
         """
-        return self._accounts.get(int(num))
-
-    accounts = property(_get_accounts)
+        for acct in self._accounts:
+            if acct.num == int(num):
+                return acct
+        return None
