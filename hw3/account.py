@@ -121,6 +121,12 @@ class Account:
 
     def _exempt_on_date(self, date: date) -> int:
         return len([t for t in self.transactions if t.is_exempt() and t.date == date])
+    
+    def _newest_date(self) -> date:
+        """Returns date of most recent transaction on the account"""
+        return self._newest_trans().date
+    
+    newest_date = property(_newest_date)
 
     def _newest_trans(self) -> Transaction:
         """Returns most recent transaction on the account"""
