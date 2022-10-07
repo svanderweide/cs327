@@ -62,7 +62,7 @@ class Transaction:
         Args:
             balance (Decimal): current balance
         """
-        return self._amt >= 0 or balance > abs(self._amt)
+        return self._amt >= 0 or balance >= abs(self._amt)
 
     def __lt__(self, other):
         return self._date < other._date
