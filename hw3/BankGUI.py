@@ -5,9 +5,9 @@ implements GUI for Bank
 """
 
 # library modules
-from decimal import InvalidOperation
 import logging
 from pickle import dump, load
+from decimal import InvalidOperation
 
 # GUI modules
 import tkinter as tk
@@ -40,18 +40,24 @@ class GUI:
         # dictionary of associated frames
         self._frames: dict = {}
 
+        # main frame
+        self._frames["main"] = tk.Frame(self._window)
+        self._frames["main"].grid()
+
         # frame for account selected
-        self._frames["selected"] = tk.Frame(self._window)
-        self._frames["selected"].grid(row=0, pady=10)
+        self._frames["selected"] = tk.Frame(self._frames["main"])
+        self._frames["selected"].grid(row=0, pady=10, sticky="news")
 
         # StringVar for selected account (named for later updating)
-        self._selected_label = tk.StringVar(self._frames["selected"], "Selected Account: None")
+        self._selected_label = tk.StringVar(self._frames["selected"])
+        self._selected_label.set("Selected Account: None")
 
-        tk.Label(self._frames["selected"], textvariable=self._selected_label).pack()
+        tk.Label(self._frames["selected"],
+                 textvariable=self._selected_label).pack()
 
         # frame for command buttons
-        self._frames["commands"] = tk.LabelFrame(self._window, text="Commands")
-        self._frames["commands"].grid(row=1, sticky="news", padx=10)
+        self._frames["commands"] = tk.LabelFrame(self._frames["main"], text="Commands")
+        self._frames["commands"].grid(row=1, sticky="news", padx=10, pady=(0, 10))
         
         tk.Button(self._frames["commands"],
                   text="open account",
@@ -78,7 +84,7 @@ class GUI:
         self._frames["input"].grid(row=2, pady=10)
         
         # frame for holding accounts and transaction frames
-        self._frames["contents"] = tk.Frame(self._window)
+        self._frames["contents"] = tk.Frame(self._frames["main"])
         self._frames["contents"].grid(row=3)
 
         # frame for holding accounts
@@ -100,6 +106,11 @@ class GUI:
         self._window.mainloop()
 
 
+    def _clean_input_frame(self) -> None:
+        for widget in self._frames["input"].winfo_children():
+            widget.destroy()
+
+
     def _update_selected_account(self) -> None:
         self._selected_label.set(f"Selected Account: {str(self._account)}")
 
@@ -117,17 +128,17 @@ class GUI:
             except InvalidOperation:
                 err_msg = "Please try again with a valid dollar amount."
                 messagebox.showwarning("WARNING", err_msg)
-            # except AttributeError:
-            #     err_msg = "New account could not be created."
-            #     messagebox.showwarning("WARNING", err_msg)
+            except AttributeError:
+                err_msg = "New account could not be created."
+                messagebox.showwarning("WARNING", err_msg)
             except OverdrawError:
                 err_msg = "New account cannot have negative initial balance."
                 messagebox.showwarning("WARNING", err_msg)
             finally:
-                # clean up the input frame
-                for widget in self._frames["input"].winfo_children():
-                    widget.destroy()
+                self._clean_input_frame()
                 self._show_accounts()
+
+        self._clean_input_frame()
 
         acct_types = ["savings", "checking"]
         options = tk.StringVar(self._frames["input"])
@@ -208,33 +219,36 @@ class GUI:
                 err_msg = f"New transactions must be from {e.latest_date} onward"
                 messagebox.showwarning("WARNING", err_msg)
             else:
-                # clean up the input frame
-                for widget in self._frames["input"].winfo_children():
-                    widget.destroy()
+                self._clean_input_frame()
             finally:
                 self._show_accounts()
 
         if self._account is None:
             messagebox.showwarning("WARNING", "You must select an account before adding a transaction")
         else:
+            self._clean_input_frame()
+
             amt_label = tk.Label(self._frames["input"], text="Amount:")
-            amt_label.grid(row=0, column=0)
+            amt_label.grid(row=0, column=0, padx=(10, 0), pady=(10, 0))
 
             amt_sel = tk.Entry(self._frames["input"])
-            amt_sel.grid(row=0, column=1)
+            amt_sel.grid(row=0, column=1, sticky="news", padx=(0, 10), pady=(10,0))
 
             date_label = tk.Label(self._frames["input"], text="Date:")
-            date_label.grid(row=1, column=0)
+            date_label.grid(row=1, column=0, padx=(10, 0))
 
             date_sel = Calendar(self._frames["input"],
                                 mindate=self._account.newest_date,
-                                date_pattern="yyyy-mm-dd")
-            date_sel.grid(row=1, column=1)
+                                date_pattern="yyyy-mm-dd",
+                                selectbackground="green",
+                                showweeknumers=False,
+                                firstweekday="sunday")
+            date_sel.grid(row=1, column=1, pady=(10, 10), padx=(0,10))
 
             button = tk.Button(self._frames["input"],
                             text="Create",
                             command=add_callback)
-            button.grid(row=2, columnspan=2)
+            button.grid(row=2, columnspan=2, pady=(0, 10))
 
 
     def _interest_and_fees(self) -> None:
