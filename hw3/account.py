@@ -99,7 +99,6 @@ class Account:
             self._transactions.append(trans)
 
         logging.debug(f"Created transaction, {self._num}, {amt}")
-        
 
     def _check_balance(self, trans: Transaction) -> bool:
         """Checks whether an incoming transaction overdraws the balance
@@ -114,7 +113,7 @@ class Account:
 
     def _check_limits(self, trans1: Transaction) -> bool:
         return trans1 is not None
-    
+
     def _check_sequence(self, trans: Transaction) -> bool:
         """Checks whether incoming transaction satisfies
         chronological (partial/total) ordering of transactions
@@ -124,20 +123,19 @@ class Account:
             return True
         if not trans.is_exempt():
             return newest <= trans
-        else:
-            # check if triggering is allowed for exempt transactions
-            return newest <= trans and not self._interest_triggered
-    
+        # check if triggering is allowed for exempt transactions
+        return newest <= trans and not self._interest_triggered
+
     def _newest_date(self) -> date:
         """Returns date of most recent transaction on the account"""
         return self._newest_trans().date
-    
+
     newest_date = property(_newest_date)
 
     def _newest_trans(self) -> Transaction:
         """Returns most recent transaction on the account"""
         return max(self.transactions, default=None)
-    
+
     def _newest_end_of_month(self) -> date:
         """Returns date for end of month"""
         # get newest transaction
@@ -160,8 +158,8 @@ class Account:
         """Calculate interest for the current balance and add
         as a new transaction exempt from account limits"""
         interest = self._get_balance() * self._interest_rate
-        date = self._newest_end_of_month().isoformat()
-        self.add_transaction(interest, date=date, exempt=True)
+        interest_date = self._newest_end_of_month().isoformat()
+        self.add_transaction(interest, date=interest_date, exempt=True)
 
     def _fees(self) -> None:
         pass
@@ -209,5 +207,5 @@ class CheckingAccount(Account):
     def _fees(self) -> None:
         """Adds a low-balance fee if balance below threshold"""
         if self._get_balance() < self._balance_threshold:
-            date = self._newest_end_of_month().isoformat()
-            self.add_transaction(self._low_balance_fee, date=date, exempt=True)
+            fees_date = self._newest_end_of_month().isoformat()
+            self.add_transaction(self._low_balance_fee, date=fees_date, exempt=True)

@@ -58,7 +58,7 @@ class GUI:
         # frame for command buttons
         self._frames["commands"] = tk.LabelFrame(self._frames["main"], text="Commands")
         self._frames["commands"].grid(row=1, sticky="news", padx=10, pady=(0, 10))
-        
+
         tk.Button(self._frames["commands"],
                   text="open account",
                   command=self._open_account).grid(row=0, column=0)
@@ -66,15 +66,15 @@ class GUI:
         tk.Button(self._frames["commands"],
                   text="add transaction",
                   command=self._add_transaction).grid(row=0, column=1)
-        
+
         tk.Button(self._frames["commands"],
                   text="interest and fees",
                   command=self._interest_and_fees).grid(row=0, column=2)
-        
+
         tk.Button(self._frames["commands"],
                   text="save",
                   command=self._save).grid(row=0, column=3)
-        
+
         tk.Button(self._frames["commands"],
                   text="load",
                   command=self._load).grid(row=0, column=4)
@@ -82,7 +82,7 @@ class GUI:
         # frame for user-input entries
         self._frames["input"] = tk.LabelFrame(self._window)
         self._frames["input"].grid(row=2, pady=10)
-        
+
         # frame for holding accounts and transaction frames
         self._frames["contents"] = tk.Frame(self._frames["main"])
         self._frames["contents"].grid(row=3)
@@ -97,23 +97,21 @@ class GUI:
 
         # frame for holding transactions
         self._frames["transactions"] = tk.LabelFrame(self._frames["contents"], text="Transactions")
-        self._frames["transactions"].grid(row=0, column=1, columnspan=3, sticky="news", padx=10, pady=10)
-        
+        self._frames["transactions"].grid(row=0, column=1, columnspan=3,
+                                          sticky="news", padx=10, pady=10)
+
         # listbox for holding transactions (inside transactions frame)
         self._transactions_listbox = tk.Listbox(self._frames["transactions"])
         self._transactions_listbox.pack()
 
         self._window.mainloop()
 
-
     def _clean_input_frame(self) -> None:
         for widget in self._frames["input"].winfo_children():
             widget.destroy()
 
-
     def _update_selected_account(self) -> None:
         self._selected_label.set(f"Selected Account: {str(self._account)}")
-
 
     def _open_account(self) -> None:
 
@@ -159,11 +157,12 @@ class GUI:
         button.grid(row=0, column=3)
 
     class SelectAccountHandler:
+        """Event handler for select account buttons"""
 
         def __init__(self, gui, acct) -> None:
             self._gui = gui
             self._acct = acct
-        
+
         def __call__(self) -> None:
             self._gui._account = self._acct
             self._gui._update_selected_account()
@@ -181,12 +180,12 @@ class GUI:
                       text=str(acct),
                       command=GUI.SelectAccountHandler(self, acct),
                       bg="white").grid(column=0, sticky="nesw")
-        
+
         if self._account is not None: 
             self._show_transactions()
 
     def _show_transactions(self) -> None:
-        
+
         for trans in self._transactions_listbox.winfo_children():
             trans.destroy()
 
@@ -198,11 +197,9 @@ class GUI:
                      fg=col,
                      bg="white").grid(sticky="nws")
 
-
     def _add_transaction(self) -> None:
-        
-        def add_callback() -> None:
 
+        def add_callback() -> None:
             # adding a transaction can raise exceptions
             try:
                 self._account.add_transaction(amt_sel.get(), date=date_sel.get_date())
@@ -215,8 +212,8 @@ class GUI:
             except TransactionLimitError:
                 err_msg = "This transaction could not be completed because the account has reached a transaction limit."
                 messagebox.showwarning("WARNING", err_msg)
-            except TransactionSequenceError as e:
-                err_msg = f"New transactions must be from {e.latest_date} onward"
+            except TransactionSequenceError as err:
+                err_msg = f"New transactions must be from {err.latest_date} onward"
                 messagebox.showwarning("WARNING", err_msg)
             else:
                 self._clean_input_frame()
@@ -250,27 +247,24 @@ class GUI:
                             command=add_callback)
             button.grid(row=2, columnspan=2, pady=(0, 10))
 
-
     def _interest_and_fees(self) -> None:
         try:
             self._account.interest_and_fees()
         except AttributeError:
             err_msg = "This command requires that you first select an account."
             messagebox.showwarning("WARNING", err_msg)
-        except TransactionSequenceError as e:
-            err_msg = f"Cannot apply interest and fees again in the month of {e.latest_date.strftime('%B')}."
+        except TransactionSequenceError as err:
+            err_msg = f"Cannot apply interest and fees again in the month of {err.latest_date.strftime('%B')}."
             messagebox.showwarning("WARNING", err_msg)
         else:
             logging.debug("Triggered fees and interest")
         finally:
             self._show_accounts()
 
-
     def _save(self) -> None:
         with open("bank.pickle", "wb") as file:
             dump(self._bank, file)
         logging.debug("Saved to bank.pickle")
-
 
     def _load(self) -> None:
         try:
