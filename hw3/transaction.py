@@ -6,12 +6,26 @@ implements Transaction class to store transaction information
 
 from datetime import datetime, date
 from decimal import setcontext, BasicContext, Decimal
+from sqlite3 import Date
+
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, ForeignKey, Integer, Float, Boolean, DateTime
+
+from db import Base
 
 # set Decimal context for rounding
 setcontext(BasicContext)
 
-class Transaction:
+class Transaction(Base):
     """Represents an individual transaction"""
+
+    __tablename__ = "transaction"
+
+    _id = Column(Integer, primary_key=True)
+    _amt = Column(Float)
+    _date = Column(DateTime)
+    _exempt = Column(Boolean)
+    _account_num = Column(Integer, ForeignKey("account._num"))
 
     def __init__(self, amt, date=None, exempt=False) -> None:
         """

@@ -15,6 +15,11 @@ from datetime import date
 from calendar import monthrange
 from transaction import Transaction
 
+from sqlalchemy import ForeignKey, Column, Integer, Float, Boolean, JSON
+from sqlalchemy.orm import relationship, backref
+
+from db import Base
+
 class OverdrawError(Exception):
     """Custom exception to handle overdrawn balance errors"""
 
@@ -28,12 +33,25 @@ class TransactionSequenceError(Exception):
         super().__init__()
         self.latest_date = latest_date
 
-class Account:
+class Account(Base):
     """Abstract class for account subclasses"""
+
+    __tablename__ = "account"
+
+    _num = Column(Integer, primary_key=True)
+    _transactions = relationship("Transaction", backref=backref("account"))
+    _interest_rate = Column(Float)
+    _interest_triggered = Column(Boolean)
+    _bank_id = Column(Integer, ForeignKey("bank._id"))
+    _type = Column(Boolean)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "account",
+        "polymorphic_on": _type,
+    }
 
     def __init__(self, num: int) -> None:
         self._num = num
-        self._transactions = []
         self._interest_rate = Decimal(0)
         self._interest_triggered = False
 
@@ -168,6 +186,12 @@ class Account:
 class SavingsAccount(Account):
     """Account subclass for Savings account"""
 
+    __tablename__ = "savingsaccount"
+
+    _num = Column(Integer, ForeignKey("account._num"), primary_key=True)
+    _day_lim = Column(Integer)
+    _month_lim = Column(Integer)
+
     def __init__(self, num: int) -> None:
         super().__init__(num)
         self._interest_rate = Decimal('0.029')
@@ -194,6 +218,12 @@ class SavingsAccount(Account):
 
 class CheckingAccount(Account):
     """Account subclass for Checking account"""
+
+    __tablename__ = "checkingaccount"
+
+    _num = Column(Integer, ForeignKey("account._num"), primary_key=True)
+    _balance_threshold = Column(Integer)
+    _low_balance_fee = Column(Integer)
 
     def __init__(self, num: int) -> None:
         super().__init__(num)

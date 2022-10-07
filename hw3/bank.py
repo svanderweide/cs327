@@ -7,15 +7,25 @@ implements Bank class to aggregate Accounts
 import logging
 from account import Account, SavingsAccount, CheckingAccount
 
+from sqlalchemy import Column, Integer
+from sqlalchemy.orm import relationship, backref
+
+from db import Base
+
 # constants for pattern matching
 SAVINGS = "savings"
 CHECKING = "checking"
 
-class Bank:
+class Bank(Base):
     """Contains information about accounts at a bank"""
 
-    def __init__(self) -> None:
-        self._accounts: dict = {}
+    __tablename__ = "bank"
+
+    _id = Column(Integer, primary_key=True)
+    _accounts = relationship("Account", backref=backref("bank"))
+
+    # def __init__(self) -> None:
+    #     self._accounts: dict = {}
 
     def add_account(self, acct_type: str) -> Account:
         """Creates and adds an account to the bank

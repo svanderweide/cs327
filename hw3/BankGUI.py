@@ -14,6 +14,10 @@ import tkinter as tk
 from tkinter import messagebox
 from tkcalendar import Calendar
 
+# SQL modules
+from db import Base, DATABASE
+from sqlalchemy import create_engine
+
 # custom modules
 from bank import Bank
 from account import Account, OverdrawError, TransactionLimitError, TransactionSequenceError
@@ -278,4 +282,6 @@ class GUI:
         self._show_accounts()
 
 if __name__ == "__main__":
+    engine = create_engine(DATABASE)
+    Base.metadata.create_all(engine)
     GUI()
