@@ -35,7 +35,7 @@ class Account:
         self._num = num
         self._transactions = []
         self._interest_rate = Decimal(0)
-        self._exempt_allowed = 1
+        self._interest_triggered = False
 
     def __str__(self) -> str:
         """Formats the account's number and balance"""
@@ -75,18 +75,27 @@ class Account:
         lim_ok = self._check_limits(trans)
         seq_ok = self._check_sequence(trans)
 
+        # get newest transaction
+        newest = self._newest_trans()
+
+        # exempt transactions only care about sequence errors
         if trans.is_exempt():
             if seq_ok:
                 self._transactions.append(trans)
             else:
-                raise TransactionSequenceError(self._newest_trans()._date)
+                raise TransactionSequenceError(newest.date)
+        # non-exempt transactions care about all errors
         elif not bal_ok:
             raise OverdrawError
         elif not lim_ok:
             raise TransactionLimitError
         elif not seq_ok:
-            raise TransactionSequenceError(self._newest_trans()._date)
+            raise TransactionSequenceError(newest._date)
         else:
+            # if transaction enters new month, enable interest/fees
+            if newest is not None and trans.date > self._newest_end_of_month():
+                self._interest_triggered = False
+            # include transaction
             self._transactions.append(trans)
 
         logging.debug(f"Created transaction, {self._num}, {amt}")
@@ -113,14 +122,11 @@ class Account:
         newest = self._newest_trans()
         if newest is None:
             return True
-        elif not trans.is_exempt():
+        if not trans.is_exempt():
             return newest <= trans
         else:
-            num_exempt = self._exempt_on_date(newest.date)
-            return num_exempt < self._exempt_allowed
-
-    def _exempt_on_date(self, date: date) -> int:
-        return len([t for t in self.transactions if t.is_exempt() and t.date == date])
+            # check if triggering is allowed for exempt transactions
+            return newest <= trans and not self._interest_triggered
     
     def _newest_date(self) -> date:
         """Returns date of most recent transaction on the account"""
@@ -133,7 +139,7 @@ class Account:
         return max(self.transactions, default=None)
     
     def _newest_end_of_month(self) -> date:
-        """Returns string of date for end of month"""
+        """Returns date for end of month"""
         # get newest transaction
         newest = self._newest_trans()
 
@@ -148,6 +154,7 @@ class Account:
         """Calculate interest and fees for the account"""
         self._interest()
         self._fees()
+        self._interest_triggered = True
 
     def _interest(self) -> None:
         """Calculate interest for the current balance and add
@@ -195,7 +202,6 @@ class CheckingAccount(Account):
         self._interest_rate = Decimal('0.0012')
         self._balance_threshold = Decimal(100)
         self._low_balance_fee = Decimal(-10)
-        self._exempt_allowed = 2
 
     def __str__(self) -> str:
         return "Checking" + super().__str__()
