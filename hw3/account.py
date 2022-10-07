@@ -9,16 +9,19 @@ classes:
     checking: checking account (higher interest, fees)
 """
 
+# library modules
 import logging
 from decimal import Decimal
 from datetime import date
 from calendar import monthrange
-from transaction import Transaction
 
-from sqlalchemy import ForeignKey, Column, Integer, Float, String
+# SQL modules
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy import ForeignKey, Column, Integer, Float, String
 
+# custom modules
 from db import Base
+from transaction import Transaction
 
 class OverdrawError(Exception):
     """Custom exception to handle overdrawn balance errors"""
@@ -99,19 +102,20 @@ class Account(Base):
         # exempt transactions only care about sequence errors
         if trans.is_exempt() and not seq_ok:
             raise TransactionSequenceError(newest.date)
+
         # non-exempt transactions care about all errors
-        elif not bal_ok:
+        if not bal_ok:
             raise OverdrawError
-        elif not lim_ok:
+        if not lim_ok:
             raise TransactionLimitError
-        elif not seq_ok:
-            raise TransactionSequenceError(newest._date)
-        else:
-            # if non-exempt transaction enters new month, enable interest/fees
-            if newest is not None and trans.date > self._newest_end_of_month():
-                self._interest_triggered = False
-                session.add(self)
-        
+        if not seq_ok:
+            raise TransactionSequenceError(newest.date)
+
+        # if non-exempt transaction enters new month, enable interest/fees
+        if newest is not None and trans.date > self._newest_end_of_month():
+            self._interest_triggered = False
+            session.add(self)
+
         # include transaction
         self._transactions.append(trans)
         session.add(trans)

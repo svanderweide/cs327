@@ -4,13 +4,16 @@ bank module
 implements Bank class to aggregate Accounts
 """
 
+# library modules
 import logging
-from account import Account, SavingsAccount, CheckingAccount
 
+# SQL modules
 from sqlalchemy import Column, Integer
 from sqlalchemy.orm import relationship, backref
 
+# custom modules
 from db import Base
+from account import Account, SavingsAccount, CheckingAccount
 
 # constants for pattern matching
 SAVINGS = "savings"

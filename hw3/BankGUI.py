@@ -6,7 +6,6 @@ implements GUI for Bank
 
 # library modules
 import logging
-from pickle import dump, load
 from decimal import InvalidOperation
 
 # GUI modules
@@ -15,11 +14,11 @@ from tkinter import messagebox
 from tkcalendar import Calendar
 
 # SQL modules
-from db import Base, DATABASE
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
 # custom modules
+from db import Base, DATABASE
 from bank import Bank
 from account import Account, OverdrawError, TransactionLimitError, TransactionSequenceError
 
@@ -190,7 +189,7 @@ class GUI:
                       command=GUI.SelectAccountHandler(self, acct),
                       bg="white").grid(column=0, sticky="nesw")
 
-        if self._account is not None: 
+        if self._account is not None:
             self._show_transactions()
 
     def _show_transactions(self) -> None:

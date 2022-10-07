@@ -4,12 +4,14 @@ transaction module
 implements Transaction class to store transaction information
 """
 
+# library modules
 from datetime import datetime, date
 from decimal import setcontext, BasicContext, Decimal
 
-from sqlalchemy.orm import relationship, backref
+# SQL modules
 from sqlalchemy import Column, ForeignKey, Integer, Float, Boolean, Date
 
+# custom modules
 from db import Base
 
 # set Decimal context for rounding
