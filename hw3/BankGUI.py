@@ -6,13 +6,13 @@ implements GUI for Bank
 
 # library modules
 from decimal import InvalidOperation
-import sys
 import logging
 from pickle import dump, load
 
 # GUI modules
 import tkinter as tk
 from tkinter import messagebox
+from tkcalendar import Calendar
 
 # custom modules
 from bank import Bank
@@ -116,13 +116,13 @@ class GUI:
                 acct.add_transaction(amt_sel.get())
             except InvalidOperation:
                 err_msg = "Please try again with a valid dollar amount."
-                messagebox.showwarning("ERROR", err_msg)
+                messagebox.showwarning("WARNING", err_msg)
             except AttributeError:
                 err_msg = "New account could not be created."
-                messagebox.showwarning("ERROR", err_msg)
+                messagebox.showwarning("WARNING", err_msg)
             except OverdrawError:
                 err_msg = "New account cannot have negative initial balance."
-                messagebox.showwarning("ERROR", err_msg)
+                messagebox.showwarning("WARNING", err_msg)
             finally:
                 # clean up the input frame
                 for widget in self._frames["input"].winfo_children():
@@ -187,28 +187,26 @@ class GUI:
                      fg=col,
                      bg="white").grid(sticky="nws")
 
+
     def _add_transaction(self) -> None:
         
         def add_callback() -> None:
 
             # adding a transaction can raise exceptions
             try:
-                self._account.add_transaction(amt_sel.get(), date=date_sel.get())
+                self._account.add_transaction(amt_sel.get(), date=date_sel.get_date())
             except InvalidOperation:
                 err_msg = "Please try again with a valid dollar amount."
-                messagebox.showwarning("ERROR", err_msg)
-            except AttributeError:
-                err_msg = "This utility requires that you first select an account."
-                messagebox.showwarning("ERROR", err_msg)
+                messagebox.showwarning("WARNING", err_msg)
             except OverdrawError:
                 err_msg = "This transaction could not be completed due to an insufficient account balance."
-                messagebox.showwarning("ERROR", err_msg)
+                messagebox.showwarning("WARNING", err_msg)
             except TransactionLimitError:
                 err_msg = "This transaction could not be completed because the account has reached a transaction limit."
-                messagebox.showwarning("ERROR", err_msg)
+                messagebox.showwarning("WARNING", err_msg)
             except TransactionSequenceError as e:
                 err_msg = f"New transactions must be from {e.latest_date} onward"
-                messagebox.showwarning("ERROR", err_msg)
+                messagebox.showwarning("WARNING", err_msg)
             else:
                 # clean up the input frame
                 for widget in self._frames["input"].winfo_children():
@@ -216,63 +214,42 @@ class GUI:
             finally:
                 self._show_accounts()
 
-        amt_label = tk.Label(self._frames["input"], text="Amount:")
-        amt_label.grid(row=0, column=0)
+        if self._account is None:
+            messagebox.showwarning("WARNING", "You must select an account before adding a transaction")
+        else:
+            amt_label = tk.Label(self._frames["input"], text="Amount:")
+            amt_label.grid(row=0, column=0)
 
-        amt_sel = tk.Entry(self._frames["input"])
-        amt_sel.grid(row=0, column=1)
+            amt_sel = tk.Entry(self._frames["input"])
+            amt_sel.grid(row=0, column=1)
 
-        date_label = tk.Label(self._frames["input"], text="Date:")
-        date_label.grid(row=1, column=0)
+            date_label = tk.Label(self._frames["input"], text="Date:")
+            date_label.grid(row=1, column=0)
 
-        date_sel = tk.Entry(self._frames["input"])
-        date_sel.grid(row=1, column=1)
+            date_sel = Calendar(self._frames["input"],
+                                mindate=self._account.newest_date,
+                                date_pattern="yyyy-mm-dd")
+            date_sel.grid(row=1, column=1)
 
-        button = tk.Button(self._frames["input"],
-                           text="Create",
-                           command=add_callback)
-        button.grid(row=2, columnspan=2)
+            button = tk.Button(self._frames["input"],
+                            text="Create",
+                            command=add_callback)
+            button.grid(row=2, columnspan=2)
 
 
     def _interest_and_fees(self) -> None:
-        
-        def open_callback() -> None:
-
-            # adding an account cannot raise an exception
-            acct = self._bank.add_account(options.get())
-
-            # adding a transaction can raise exceptions
-            try:
-                acct.add_transaction(amt_sel.get())
-            except AttributeError:
-                err_msg = "New account could not be created"
-                messagebox.showwarning("ERROR", err_msg)
-            except OverdrawError:
-                err_msg = "New account cannot have negative initial balance"
-                messagebox.showwarning("ERROR", err_msg)
-            finally:
-                # clean up the input frame
-                for widget in self._frames["input"].winfo_children():
-                    widget.destroy()
-                self._show_accounts()
-
-        acct_types = ["savings", "checking"]
-        options = tk.StringVar(self._frames["input"])
-        options.set(acct_types[0])
-
-        amt_label = tk.Label(self._frames["input"], text="Initial Deposit:")
-        amt_label.grid(row=0, column=0)
-
-        amt_sel = tk.Entry(self._frames["input"])
-        amt_sel.grid(row=0, column=1)
-
-        type_sel = tk.OptionMenu(self._frames["input"], options, *acct_types)
-        type_sel.grid(row=0, column=2, padx=10)
-
-        button = tk.Button(self._frames["input"],
-                           text="Create",
-                           command=open_callback)
-        button.grid(row=0, column=3)
+        try:
+            self._account.interest_and_fees()
+        except AttributeError:
+            err_msg = "This command requires that you first select an account."
+            messagebox.showwarning("WARNING", err_msg)
+        except TransactionSequenceError as e:
+            err_msg = f"Cannot apply interest and fees again in the month of {e.latest_date.strftime('%B')}."
+            messagebox.showwarning("WARNING", err_msg)
+        else:
+            logging.debug("Triggered fees and interest")
+        finally:
+            self._show_accounts()
 
 
     def _save(self) -> None:
