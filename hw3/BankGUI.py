@@ -73,8 +73,10 @@ class GUI:
                  textvariable=self._selected_label).pack()
 
         # frame for command buttons
-        self._frames["commands"] = tk.LabelFrame(self._frames["main"], text="Commands")
-        self._frames["commands"].grid(row=1, sticky="news", padx=10, pady=(0, 10))
+        self._frames["commands"] = tk.LabelFrame(self._frames["main"],
+                                                 text="Commands")
+        self._frames["commands"].grid(row=1, sticky="news",
+                                      padx=10, pady=(0, 10))
 
         tk.Button(self._frames["commands"],
                   text="open account",
@@ -97,15 +99,18 @@ class GUI:
         self._frames["contents"].grid(row=3)
 
         # frame for holding accounts
-        self._frames["accounts"] = tk.LabelFrame(self._frames["contents"], text="Accounts")
-        self._frames["accounts"].grid(row=0, column=0, sticky="news", padx=10, pady=10)
+        self._frames["accounts"] = tk.LabelFrame(self._frames["contents"],
+                                                 text="Accounts")
+        self._frames["accounts"].grid(row=0, column=0, sticky="news",
+                                      padx=10, pady=10)
 
         # listbox for holding accounts (inside accounts frame)
         self._accounts_listbox = tk.Listbox(self._frames["accounts"])
         self._accounts_listbox.pack()
 
         # frame for holding transactions
-        self._frames["transactions"] = tk.LabelFrame(self._frames["contents"], text="Transactions")
+        self._frames["transactions"] = tk.LabelFrame(self._frames["contents"],
+                                                     text="Transactions")
         self._frames["transactions"].grid(row=0, column=1, columnspan=3,
                                           sticky="news", padx=10, pady=10)
 
@@ -118,9 +123,10 @@ class GUI:
         self._window.mainloop()
 
     def _handle_exception(self, exception, value, traceback):
-        messagebox.showerror("ERROR", "Sorry! Something unexpected happened. \
-                                       If this problem persists please contact \
-                                       our support team for assistance.")
+        err_msg = ("Sorry! Something unexpected happened. "
+                   "If this problem persists, please contact "
+                   "our support team for assistance.")
+        messagebox.showerror("ERROR", err_msg)
         logging.error(f"{exception.__name__}: {repr(value)}")
         sys.exit(1)
 
@@ -204,7 +210,9 @@ class GUI:
         amt_label = tk.Label(self._frames["input"], text="Initial Deposit:")
         amt_label.grid(row=0, column=0)
 
-        amt_sel = GUI.ValidatingEntry(self._frames["input"], r"^\d+(\.\d*)?$", button)
+        amt_sel = GUI.ValidatingEntry(self._frames["input"],
+                                      r"^\d+(\.\d*)?$",
+                                      button)
         amt_sel.grid(row=0, column=1)
 
         type_sel = tk.OptionMenu(self._frames["input"], options, *acct_types)
@@ -263,12 +271,12 @@ class GUI:
                 err_msg = "Please try again with a valid dollar amount."
                 messagebox.showwarning("WARNING", err_msg)
             except OverdrawError:
-                err_msg = "This transaction could not be completed \
-                           due to an insufficient account balance."
+                err_msg = ("This transaction could not be completed "
+                           "due to an insufficient account balance.")
                 messagebox.showwarning("WARNING", err_msg)
             except TransactionLimitError:
-                err_msg = "This transaction could not be completed \
-                           because the account has reached a transaction limit."
+                err_msg = ("This transaction could not be completed "
+                           "because the account has reached a transaction limit.")
                 messagebox.showwarning("WARNING", err_msg)
             except TransactionSequenceError as err:
                 err_msg = f"New transactions must be from {err.latest_date} onward"
@@ -279,8 +287,8 @@ class GUI:
                 self._show_accounts()
 
         if self._account is None:
-            messagebox.showwarning("WARNING", "You must select an account \
-                                               before adding a transaction")
+            messagebox.showwarning("WARNING", ("You must select an account"
+                                               "before adding a transaction"))
         else:
             self._clean_input_frame()
 
@@ -315,8 +323,8 @@ class GUI:
             err_msg = "This command requires that you first select an account."
             messagebox.showwarning("WARNING", err_msg)
         except TransactionSequenceError as err:
-            err_msg = f"Cannot apply interest and fees again \
-                        in the month of {err.latest_date.strftime('%B')}."
+            err_msg = (f"Cannot apply interest and fees again "
+                       f"in the month of {err.latest_date.strftime('%B')}.")
             messagebox.showwarning("WARNING", err_msg)
         else:
             logging.debug("Triggered fees and interest")
