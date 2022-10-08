@@ -51,6 +51,7 @@ class GUI:
         # main tkinter window with title
         self._window = tk.Tk()
         self._window.title("Bank")
+        self._window.report_callback_exception = self._handle_exception
 
         # dictionary of associated frames
         self._frames: dict = {}
@@ -115,6 +116,11 @@ class GUI:
 
         self._window.mainloop()
 
+    def _handle_exception(exception, value, traceback):
+        messagebox.showerror("ERROR", "Sorry! Something unexpected happened. If this problem persists please contact our support team for assistance.")
+        logging.error(f"{exception.__name__}: {repr(value)}")
+        exit(1)
+
     def _clean_input_frame(self) -> None:
         for widget in self._frames["input"].winfo_children():
             widget.destroy()
@@ -130,7 +136,7 @@ class GUI:
             regexp (str): regexp string for pattern matching
         """
 
-        def __init__(self, parent, regexp, *args, **kwargs):
+        def __init__(self, parent, regexp, button, *args, **kwargs):
 
             tk.Frame.__init__(self, parent, *args, **kwargs)
 
@@ -141,13 +147,17 @@ class GUI:
             self._entry.bind("<KeyPress>", self._validate)
             self._entry.bind("<KeyRelease>", self._validate)
 
+            self._button: tk.Button = button
+
         def _validate(self, event):
             
             data = self._entry.get()
             if fullmatch(self._regexp, data):
                 self._entry.configure(bg="lightgreen")
+                self._button.configure(state="normal")
             else:
                 self._entry.configure(bg="pink")
+                self._button.configure(state="disabled")
             
         def get(self):
             return self._entry.get()
@@ -169,11 +179,12 @@ class GUI:
             except AttributeError:
                 err_msg = "New account could not be created."
                 messagebox.showwarning("WARNING", err_msg)
+                self._clean_input_frame()
             except OverdrawError:
                 err_msg = "New account cannot have negative initial balance."
                 messagebox.showwarning("WARNING", err_msg)
-            finally:
                 self._clean_input_frame()
+            finally:
                 self._show_accounts()
 
         self._clean_input_frame()
@@ -182,19 +193,21 @@ class GUI:
         options = tk.StringVar(self._frames["input"])
         options.set(acct_types[0])
 
+        button = tk.Button(self._frames["input"],
+                           text="Create",
+                           command=open_callback)
+        button.grid(row=0, column=3)
+
         amt_label = tk.Label(self._frames["input"], text="Initial Deposit:")
         amt_label.grid(row=0, column=0)
 
-        amt_sel = GUI.ValidatingEntry(self._frames["input"], r"^\d+(\.\d*)?$")
+        amt_sel = GUI.ValidatingEntry(self._frames["input"], r"^\d+(\.\d*)?$", button)
         amt_sel.grid(row=0, column=1)
 
         type_sel = tk.OptionMenu(self._frames["input"], options, *acct_types)
         type_sel.grid(row=0, column=2, padx=10)
 
-        button = tk.Button(self._frames["input"],
-                           text="Create",
-                           command=open_callback)
-        button.grid(row=0, column=3)
+        
 
     class SelectAccountHandler:
         """Event handler for select account buttons"""
@@ -267,10 +280,15 @@ class GUI:
         else:
             self._clean_input_frame()
 
+            button = tk.Button(self._frames["input"],
+                            text="Create",
+                            command=add_callback)
+            button.grid(row=2, columnspan=2, pady=(0, 10))
+
             amt_label = tk.Label(self._frames["input"], text="Amount:")
             amt_label.grid(row=0, column=0, padx=(10, 0), pady=(10, 0))
 
-            amt_sel = GUI.ValidatingEntry(self._frames["input"], r"^(-)?\d+(\.\d*)?$")
+            amt_sel = GUI.ValidatingEntry(self._frames["input"], r"^(-)?\d+(\.\d*)?$", button)
             amt_sel.grid(row=0, column=1, sticky="news", padx=(0, 10), pady=(10,0))
 
             date_label = tk.Label(self._frames["input"], text="Date:")
@@ -283,11 +301,6 @@ class GUI:
                                 showweeknumers=False,
                                 firstweekday="sunday")
             date_sel.grid(row=1, column=1, pady=(10, 10), padx=(0,10))
-
-            button = tk.Button(self._frames["input"],
-                            text="Create",
-                            command=add_callback)
-            button.grid(row=2, columnspan=2, pady=(0, 10))
 
     def _interest_and_fees(self) -> None:
         try:
