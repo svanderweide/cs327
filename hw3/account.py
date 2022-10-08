@@ -100,8 +100,9 @@ class Account(Base):
         newest = self._newest_trans()
 
         # exempt transactions only care about sequence errors
-        if trans.is_exempt() and not seq_ok:
-            raise TransactionSequenceError(newest.date)
+        if trans.is_exempt():
+            if not seq_ok:
+                raise TransactionSequenceError(newest.date)
         else:
             # non-exempt transactions care about all errors
             if not bal_ok:
