@@ -5,6 +5,7 @@ implements GUI for Bank
 """
 
 # library modules
+import sys
 import logging
 from re import fullmatch
 from decimal import InvalidOperation
@@ -116,10 +117,12 @@ class GUI:
 
         self._window.mainloop()
 
-    def _handle_exception(exception, value, traceback):
-        messagebox.showerror("ERROR", "Sorry! Something unexpected happened. If this problem persists please contact our support team for assistance.")
+    def _handle_exception(self, exception, value, traceback):
+        messagebox.showerror("ERROR", "Sorry! Something unexpected happened. \
+                                       If this problem persists please contact \
+                                       our support team for assistance.")
         logging.error(f"{exception.__name__}: {repr(value)}")
-        exit(1)
+        sys.exit(1)
 
     def _clean_input_frame(self) -> None:
         for widget in self._frames["input"].winfo_children():
@@ -130,7 +133,7 @@ class GUI:
 
     class ValidatingEntry(tk.Frame):
         """Entry with highlighting for validation
-        
+
         constructor args:
             parent (tk Widget): container for widget
             regexp (str): regexp string for pattern matching
@@ -150,7 +153,7 @@ class GUI:
             self._button: tk.Button = button
 
         def _validate(self, event):
-            
+
             data = self._entry.get()
             if fullmatch(self._regexp, data):
                 self._entry.configure(bg="lightgreen")
@@ -158,10 +161,10 @@ class GUI:
             else:
                 self._entry.configure(bg="pink")
                 self._button.configure(state="disabled")
-            
-        def get(self):
-            return self._entry.get()
 
+        def get(self):
+            """Returns value of contained tk.Entry()"""
+            return self._entry.get()
 
     def _open_account(self) -> None:
 
@@ -206,8 +209,6 @@ class GUI:
 
         type_sel = tk.OptionMenu(self._frames["input"], options, *acct_types)
         type_sel.grid(row=0, column=2, padx=10)
-
-        
 
     class SelectAccountHandler:
         """Event handler for select account buttons"""
@@ -262,10 +263,12 @@ class GUI:
                 err_msg = "Please try again with a valid dollar amount."
                 messagebox.showwarning("WARNING", err_msg)
             except OverdrawError:
-                err_msg = "This transaction could not be completed due to an insufficient account balance."
+                err_msg = "This transaction could not be completed \
+                           due to an insufficient account balance."
                 messagebox.showwarning("WARNING", err_msg)
             except TransactionLimitError:
-                err_msg = "This transaction could not be completed because the account has reached a transaction limit."
+                err_msg = "This transaction could not be completed \
+                           because the account has reached a transaction limit."
                 messagebox.showwarning("WARNING", err_msg)
             except TransactionSequenceError as err:
                 err_msg = f"New transactions must be from {err.latest_date} onward"
@@ -276,7 +279,8 @@ class GUI:
                 self._show_accounts()
 
         if self._account is None:
-            messagebox.showwarning("WARNING", "You must select an account before adding a transaction")
+            messagebox.showwarning("WARNING", "You must select an account \
+                                               before adding a transaction")
         else:
             self._clean_input_frame()
 
@@ -288,7 +292,9 @@ class GUI:
             amt_label = tk.Label(self._frames["input"], text="Amount:")
             amt_label.grid(row=0, column=0, padx=(10, 0), pady=(10, 0))
 
-            amt_sel = GUI.ValidatingEntry(self._frames["input"], r"^(-)?\d+(\.\d*)?$", button)
+            amt_sel = GUI.ValidatingEntry(self._frames["input"],
+                                          r"^(-)?\d+(\.\d*)?$",
+                                          button)
             amt_sel.grid(row=0, column=1, sticky="news", padx=(0, 10), pady=(10,0))
 
             date_label = tk.Label(self._frames["input"], text="Date:")
@@ -309,7 +315,8 @@ class GUI:
             err_msg = "This command requires that you first select an account."
             messagebox.showwarning("WARNING", err_msg)
         except TransactionSequenceError as err:
-            err_msg = f"Cannot apply interest and fees again in the month of {err.latest_date.strftime('%B')}."
+            err_msg = f"Cannot apply interest and fees again \
+                        in the month of {err.latest_date.strftime('%B')}."
             messagebox.showwarning("WARNING", err_msg)
         else:
             logging.debug("Triggered fees and interest")
