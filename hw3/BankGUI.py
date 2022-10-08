@@ -6,6 +6,7 @@ implements GUI for Bank
 
 # library modules
 import logging
+from re import fullmatch
 from decimal import InvalidOperation
 
 # GUI modules
@@ -121,6 +122,37 @@ class GUI:
     def _update_selected_account(self) -> None:
         self._selected_label.set(f"Selected Account: {str(self._account)}")
 
+    class ValidatingEntry(tk.Frame):
+        """Entry with highlighting for validation
+        
+        constructor args:
+            parent (tk Widget): container for widget
+            regexp (str): regexp string for pattern matching
+        """
+
+        def __init__(self, parent, regexp, *args, **kwargs):
+
+            tk.Frame.__init__(self, parent, *args, **kwargs)
+
+            self._regexp = regexp
+
+            self._entry = tk.Entry(self)
+            self._entry.pack()
+            self._entry.bind("<KeyPress>", self._validate)
+            self._entry.bind("<KeyRelease>", self._validate)
+
+        def _validate(self, event):
+            
+            data = self._entry.get()
+            if fullmatch(self._regexp, data):
+                self._entry.configure(bg="lightgreen")
+            else:
+                self._entry.configure(bg="pink")
+            
+        def get(self):
+            return self._entry.get()
+
+
     def _open_account(self) -> None:
 
         def open_callback() -> None:
@@ -153,7 +185,7 @@ class GUI:
         amt_label = tk.Label(self._frames["input"], text="Initial Deposit:")
         amt_label.grid(row=0, column=0)
 
-        amt_sel = tk.Entry(self._frames["input"])
+        amt_sel = GUI.ValidatingEntry(self._frames["input"], r"^\d+(\.\d*)?$")
         amt_sel.grid(row=0, column=1)
 
         type_sel = tk.OptionMenu(self._frames["input"], options, *acct_types)
@@ -238,7 +270,7 @@ class GUI:
             amt_label = tk.Label(self._frames["input"], text="Amount:")
             amt_label.grid(row=0, column=0, padx=(10, 0), pady=(10, 0))
 
-            amt_sel = tk.Entry(self._frames["input"])
+            amt_sel = GUI.ValidatingEntry(self._frames["input"], r"^(-)?\d+(\.\d*)?$")
             amt_sel.grid(row=0, column=1, sticky="news", padx=(0, 10), pady=(10,0))
 
             date_label = tk.Label(self._frames["input"], text="Date:")
