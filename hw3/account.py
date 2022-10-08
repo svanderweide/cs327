@@ -68,7 +68,7 @@ class Account(Base):
         Returns:
             Decimal: current balance
         """
-        return sum(x for x in self._transactions)
+        return Decimal(sum(x for x in self._transactions))
 
     balance = property(_get_balance)
 
@@ -102,25 +102,26 @@ class Account(Base):
         # exempt transactions only care about sequence errors
         if trans.is_exempt() and not seq_ok:
             raise TransactionSequenceError(newest.date)
+        else:
+            # non-exempt transactions care about all errors
+            if not bal_ok:
+                raise OverdrawError
+            if not lim_ok:
+                raise TransactionLimitError
+            if not seq_ok:
+                raise TransactionSequenceError(newest.date)
 
-        # non-exempt transactions care about all errors
-        if not bal_ok:
-            raise OverdrawError
-        if not lim_ok:
-            raise TransactionLimitError
-        if not seq_ok:
-            raise TransactionSequenceError(newest.date)
+            # if non-exempt transaction enters new month, enable interest/fees
+            if newest is not None and trans.date > self._newest_end_of_month():
+                self._interest_triggered = False
+                session.add(self)
 
-        # if non-exempt transaction enters new month, enable interest/fees
-        if newest is not None and trans.date > self._newest_end_of_month():
-            self._interest_triggered = False
-            session.add(self)
-
-        # include transaction
+        # add pending transaction
         self._transactions.append(trans)
         session.add(trans)
         logging.debug(f"Created transaction, {self._num}, {amt}")
 
+        # commit pending transaction
         session.commit()
         logging.debug("Saved to bank.db")
 
@@ -152,8 +153,11 @@ class Account(Base):
         return newest <= trans and not self._interest_triggered
 
     def _newest_date(self) -> date:
-        """Returns date of most recent transaction on the account"""
-        return self._newest_trans().date
+        """Returns date of most recent transaction on the account
+        or today's date if account has no transactions (negative initial amt)
+        """
+        newest = self._newest_trans()
+        return newest.date if newest else date.today()
 
     newest_date = property(_newest_date)
 
@@ -164,11 +168,11 @@ class Account(Base):
     def _newest_end_of_month(self) -> date:
         """Returns date for end of month"""
         # get newest transaction
-        newest = self._newest_trans()
+        newest_date = self._newest_date()
 
         # calculate date attributes
-        year = newest.date.year
-        month = newest.date.month
+        year = newest_date.year
+        month = newest_date.month
         day = monthrange(year, month)[1]
 
         return date(year, month, day)
