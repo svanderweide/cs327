@@ -50,7 +50,6 @@ class Bank(Base):
         self._accounts.append(acct)
         session.add(acct)
         session.commit()
-        logging.debug("Saved to bank.db")
         return acct
 
     def _generate_account_number(self) -> int:
