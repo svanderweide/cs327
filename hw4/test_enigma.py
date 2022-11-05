@@ -61,9 +61,15 @@ class TestEnigma:
         expected = 'Y'
         output = enigma_default_swaps.encode_decode_letter('T')
         assert output == expected
+    
+    @pytest.mark.parametrize('errval', ['AB', '2'])
+    def test_enigma_encode_decode_letter_err_VE_msg(self, enigma_default: Enigma, errval):
+        err_msg = 'Please provide a letter in a-zA-Z.'
+        with pytest.raises(ValueError, match=err_msg):
+            enigma_default.encode_decode_letter(errval)
 
 @pytest.fixture
-def rotor1() -> Rotor:
+def rotorI() -> Rotor:
     return Rotor('I', 'A')
 
 @pytest.fixture
@@ -72,17 +78,17 @@ def rotorV() -> Rotor:
 
 class TestRotor:
 
-    def test_rotorI_encode_letter_print_false(self, rotor1: Rotor, capsys):
+    def test_rotorI_encode_letter(self, rotorI: Rotor, capsys):
         expected = (17, '')
-        output = (rotor1.encode_letter('X'), capsys.readouterr().out)
+        output = (rotorI.encode_letter('X'), capsys.readouterr().out)
         assert output == expected
 
-    def test_rotorI_encode_letter_print_true(self, rotor1: Rotor, capsys):
+    def test_rotorI_encode_letter_print(self, rotorI: Rotor, capsys):
         expected = (17, 'Rotor I: input = X, output = R\n')
-        output = (rotor1.encode_letter('X', printit=True), capsys.readouterr().out)
+        output = (rotorI.encode_letter('X', printit=True), capsys.readouterr().out)
         assert output == expected
 
-    def test_rotorV_encode_letter(self, rotorV: Rotor):
-        expected = 11
-        output = rotorV.encode_letter('A')
+    def test_rotorV_encode_letter_print_true(self, rotorV: Rotor, capsys):
+        expected = (22, 'Rotor V: input = A, output = V\n')
+        output = (rotorV.encode_letter(1, printit=True), capsys.readouterr().out) 
         assert output == expected
