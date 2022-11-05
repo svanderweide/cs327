@@ -66,14 +66,23 @@ class TestEnigma:
 def rotor1() -> Rotor:
     return Rotor('I', 'A')
 
+@pytest.fixture
+def rotorV() -> Rotor:
+    return Rotor('V', 'Z')
+
 class TestRotor:
 
-    def test_rotor_encode_letter_print_false(self, rotor1, capsys):
+    def test_rotorI_encode_letter_print_false(self, rotor1: Rotor, capsys):
         expected = (17, '')
         output = (rotor1.encode_letter('X'), capsys.readouterr().out)
         assert output == expected
 
-    def test_rotor_encode_letter_print_true(self, rotor1, capsys):
+    def test_rotorI_encode_letter_print_true(self, rotor1: Rotor, capsys):
         expected = (17, 'Rotor I: input = X, output = R\n')
         output = (rotor1.encode_letter('X', printit=True), capsys.readouterr().out)
+        assert output == expected
+
+    def test_rotorV_encode_letter(self, rotorV: Rotor):
+        expected = 11
+        output = rotorV.encode_letter('A')
         assert output == expected
