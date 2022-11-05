@@ -39,6 +39,10 @@ def enigma_default() -> Enigma:
     return Enigma()
 
 @pytest.fixture
+def enigma_default_swaps() -> Enigma:
+    return Enigma(swaps=['AB', 'TG', 'XY'])
+
+@pytest.fixture
 def longtext() -> str:
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" * 26
 
@@ -48,5 +52,9 @@ def longtext_enciphered() -> str:
 
 class TestEnigma:
 
-    def test_enigma_encipher(self, enigma_default, longtext, longtext_enciphered):
+    def test_enigma_encipher(self, enigma_default: Enigma, longtext, longtext_enciphered):
         assert longtext_enciphered == enigma_default.encipher(longtext)
+
+    def test_enigma_encode_decode_letter_swaps(self, enigma_default_swaps: Enigma):
+        output = enigma_default_swaps.encode_decode_letter('T')
+        assert output == 'Y'
