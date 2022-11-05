@@ -62,6 +62,11 @@ class TestEnigma:
         output = enigma_default.encipher(longtext)
         assert output == expected
 
+    def test_enigma_encode_decode_letter_swaps_lowercase(self, enigma_default_swaps: Enigma):
+        expected = 'Q'
+        output = enigma_default_swaps.encode_decode_letter('z')
+        assert output == expected
+
     def test_enigma_encode_decode_letter_swaps_double(self, enigma_default_swaps: Enigma):
         expected = 'Q'
         output = enigma_default_swaps.encode_decode_letter('Z')
