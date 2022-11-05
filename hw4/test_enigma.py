@@ -52,6 +52,11 @@ def longtext_enciphered() -> str:
 
 class TestEnigma:
 
+    @pytest.mark.parametrize('errval', [['I', 'II', 'IV'], ['I', 'II', 2]])
+    def test_enigma_invalid_rotor_key(self, errval):
+        with pytest.raises(ValueError):
+            Enigma(rotor_order=errval)
+
     def test_enigma_encipher(self, enigma_default: Enigma, longtext, longtext_enciphered):
         expected = longtext_enciphered
         output = enigma_default.encipher(longtext)
