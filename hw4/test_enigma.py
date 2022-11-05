@@ -53,8 +53,27 @@ def longtext_enciphered() -> str:
 class TestEnigma:
 
     def test_enigma_encipher(self, enigma_default: Enigma, longtext, longtext_enciphered):
-        assert longtext_enciphered == enigma_default.encipher(longtext)
+        expected = longtext_enciphered
+        output = enigma_default.encipher(longtext)
+        assert output == expected
 
     def test_enigma_encode_decode_letter_swaps(self, enigma_default_swaps: Enigma):
+        expected = 'Y'
         output = enigma_default_swaps.encode_decode_letter('T')
-        assert output == 'Y'
+        assert output == expected
+
+@pytest.fixture
+def rotor1() -> Rotor:
+    return Rotor('I', 'A')
+
+class TestRotor:
+
+    def test_rotor_encode_letter_print_false(self, rotor1, capsys):
+        expected = (17, '')
+        output = (rotor1.encode_letter('X'), capsys.readouterr().out)
+        assert output == expected
+
+    def test_rotor_encode_letter_print_true(self, rotor1, capsys):
+        expected = (17, 'Rotor I: input = X, output = R\n')
+        output = (rotor1.encode_letter('X', printit=True), capsys.readouterr().out)
+        assert output == expected
