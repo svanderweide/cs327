@@ -84,6 +84,12 @@ class TestEnigma:
                 enigma_default.set_rotor_position('ZZZ')
                 rotor.change_setting.assert_called_once_with('Z')
 
+    def test_enigma_set_plugs(self, enigma_default_swaps: Enigma):
+        expected = {'P': 'Q', 'Q': 'P', 'R': 'S', 'S': 'R'}
+        enigma_default_swaps.set_plugs(['PQ', 'RS'], True)
+        output = enigma_default_swaps.plugboard.swaps
+        assert output == expected
+
 @pytest.fixture
 def rotorI() -> Rotor:
     return Rotor('I', 'A')
