@@ -40,7 +40,7 @@ def enigma_default() -> Enigma:
 
 @pytest.fixture
 def enigma_default_swaps() -> Enigma:
-    return Enigma(swaps=['AB', 'TG', 'XY'])
+    return Enigma(swaps=['AZ', 'BQ', 'RS'])
 
 @pytest.fixture
 def longtext() -> str:
@@ -62,16 +62,22 @@ class TestEnigma:
         output = enigma_default.encipher(longtext)
         assert output == expected
 
-    def test_enigma_encode_decode_letter_swaps(self, enigma_default_swaps: Enigma):
-        expected = 'Y'
-        output = enigma_default_swaps.encode_decode_letter('T')
+    def test_enigma_encode_decode_letter_swaps_double(self, enigma_default_swaps: Enigma):
+        expected = 'Q'
+        output = enigma_default_swaps.encode_decode_letter('Z')
         assert output == expected
-    
+
     @pytest.mark.parametrize('errval', ['AB', '2'])
     def test_enigma_encode_decode_letter_err_VE_msg(self, enigma_default: Enigma, errval):
         err_msg = 'Please provide a letter in a-zA-Z.'
         with pytest.raises(ValueError, match=err_msg):
             enigma_default.encode_decode_letter(errval)
+
+    def test_enigma_set_rotor_position_rotors(self, enigma_default: Enigma):
+        for rotor in [enigma_default.r_rotor, enigma_default.m_rotor, enigma_default.l_rotor]:
+            with patch.object(rotor, 'change_setting'):
+                enigma_default.set_rotor_position('ZZZ')
+                rotor.change_setting.assert_called_once_with('Z')
 
 @pytest.fixture
 def rotorI() -> Rotor:
@@ -93,7 +99,7 @@ class TestRotor:
         output = (rotorI.encode_letter('X', printit=True), capsys.readouterr().out)
         assert output == expected
 
-    def test_rotorV_encode_letter_print_true(self, rotorV: Rotor, capsys):
+    def test_rotorV_encode_letter_print(self, rotorV: Rotor, capsys):
         expected = (22, 'Rotor V: input = A, output = V\n')
         output = (rotorV.encode_letter(1, printit=True), capsys.readouterr().out) 
         assert output == expected
