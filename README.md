@@ -10,4 +10,6 @@ Instructor: Tim Barron
 
 2. Exceptions and Logging
 
-3. Databases (SQLAlchemy) and GUIs (tkinter)
+3. `SQLAlchemy` Database ORM and `tkinter` GUIs
+
+4. Unit Testing with `pytest`
