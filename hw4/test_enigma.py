@@ -122,6 +122,13 @@ class TestEnigma:
         output = (enigma_default.key, capsys.readouterr().out)
         assert output == expected
 
+    def test_enigma_set_rotor_order(self, enigma_default: Enigma):
+        new_order = ['V', 'I', 'II']
+        enigma_default.set_rotor_order(new_order)
+        rotors = [enigma_default.l_rotor, enigma_default.m_rotor]
+        for rotor, order in zip(rotors, new_order):
+            assert repr(rotor) == repr(Rotor(order, 'A')) 
+
     def test_enigma_set_plugs(self, enigma_default_swaps: Enigma):
         new_swaps = ['PQ', 'RS']
         enigma_default_swaps.set_plugs(new_swaps, replace=True)
