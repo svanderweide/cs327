@@ -13,3 +13,5 @@ Instructor: Tim Barron
 3. `SQLAlchemy` Database ORM and `tkinter` GUIs
 
 4. Unit Testing with `pytest`
+
+5. C++ Iterator/Decorator Patterns
