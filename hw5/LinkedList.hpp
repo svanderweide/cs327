@@ -1,12 +1,13 @@
 #pragma once
 
 #include <iostream>
+#include "SmartPointer.hpp"
 
 template <class T>
 class Node
 {
     T data;
-    Node<T>* next;
+    SmartPointer<Node<T>> next;
 
 public:
     Node(T d) : data(d), next(nullptr) {}
@@ -16,12 +17,12 @@ public:
         return data;
     }
 
-    Node<T>* getNext() const
+    SmartPointer<Node<T>> getNext() const
     {
         return next;
     }
 
-    void setNext(Node<T>* n)
+    void setNext(SmartPointer<Node<T>> n)
     {
         next = n;
     }
@@ -35,10 +36,10 @@ public:
 template <class T>
 class LinkedListIterator
 {
-    Node<T>* current;
+    SmartPointer<Node<T>> current;
 
 public:
-    LinkedListIterator(Node<T>* n) : current(n) {}
+    LinkedListIterator(SmartPointer<Node<T>> n) : current(n) {}
 
     bool isDone() const
     {
@@ -55,10 +56,21 @@ public:
 template <class T>
 class LinkedList
 {
-    Node<T>* head;
+    SmartPointer<Node<T>> head;
 
 public:
     LinkedList() : head(nullptr) {}
+
+    ~LinkedList()
+    {
+        SmartPointer<Node<T>> tmpNode = nullptr;
+        while (!(head->getNext() == nullptr))
+        {
+            tmpNode = head;
+            head = head->getNext();
+            tmpNode->setNext(nullptr);
+        }
+    }
 
     LinkedListIterator<T> getIter()
     {
@@ -67,15 +79,16 @@ public:
 
     void push(T data)
     {
-        Node<T>* newNode = new Node<T>(data);
+        SmartPointer<Node<T>> newNode = new Node<T>(data);
         newNode->setNext(head);
         head = newNode;
     }
 
     T pop()
     {
-        T ret = head->get();
+        SmartPointer<Node<T>> tmpNode = head;
         head = head->getNext();
-        return ret;
+        tmpNode->setNext(nullptr);
+        return tmpNode->get();
     }
 };
