@@ -43,10 +43,15 @@ public:
     ~SmartPointer() {
         // Decrement the reference count
         // if reference become zero delete the data
-        if (refcounter->decrement() < 1)
+        if (refcounter)
         {
-            delete reference;
-            delete refcounter;
+            if (refcounter->decrement() < 1)
+            {
+                delete reference;
+                reference = nullptr;
+                delete refcounter;
+                refcounter = nullptr;
+            }
         }
     }
 
