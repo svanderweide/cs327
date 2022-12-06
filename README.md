@@ -15,3 +15,5 @@ Instructor: Tim Barron
 4. Unit Testing with `pytest`
 
 5. C++ Iterator/Decorator Patterns
+
+6. *Santorini* and Design Patterns 
