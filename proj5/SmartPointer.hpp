@@ -71,11 +71,23 @@ public:
         // Deal with old SmartPointer that is being overwritten
         // Copy sp into this (similar to copy constructor)
         // return this
-        if (refcounter->decrement() < 1) delete refcounter;
+        if (refcounter)
+        {
+            if (refcounter->decrement() < 1)
+            {
+                delete reference;
+                reference = nullptr;
+                delete refcounter;
+                refcounter = nullptr;
+            }
+        }
 
-        reference = sp.reference;
-        refcounter = sp.refcounter;
-        refcounter->increment();
+        if (!(sp == nullptr))
+        {
+            reference = sp.reference;
+            refcounter = sp.refcounter;
+            refcounter->increment();
+        }
 
         SmartPointer<T>& ref_sp = *this;
         return ref_sp;
