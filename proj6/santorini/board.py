@@ -1,28 +1,17 @@
-"""Santorini game board module"""
-
-from santorini.board_tile import SantoriniBoardTile
+from .board_tile import SantoriniBoardTile
 
 class SantoriniBoard:
-    """Santorini game board class"""
 
-    def __init__(self, dim: int) -> None:
-        self._dim: tuple = (dim, dim)
-        self._tiles = self._construct_board()
+    def __init__(self, dim: tuple=None) -> None:
+        self._dim: tuple = dim if dim else (5,5)
+        self._tiles: list = self._create_tiles()
 
-    def _construct_board(self):
-        return self._construct_board_section(self._dim)
+    def _create_tiles(self) -> list:
+        row = [SantoriniBoardTile() for _ in range(self._dim[1])]
+        tiles = [list(row) for _ in range(self._dim[0])]
+        return tiles
 
-    def _construct_board_section(self, dim: tuple) -> list[SantoriniBoardTile] | SantoriniBoardTile:
-        if dim:
-            section = []
-            for _ in range(dim[0]):
-                subsection = self._construct_board_section(dim[1:])
-                section.append(subsection)
-        else:
-            section = SantoriniBoardTile()
-        return section
-
-    def __str__(self) -> None:
+    def __str__(self) -> str:
         board = ''
         row_division = '+--' * self._dim[1] + '+'
 

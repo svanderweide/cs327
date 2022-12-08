@@ -49,7 +49,6 @@ def main() -> None:
     """Main function called when the program is invoked via CLI"""
 
     args: dict[str, str] = parse()
-
     game = SantoriniGame(**args)
     game.run()
 

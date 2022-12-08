@@ -1,10 +1,12 @@
-"""Santorini game structure module"""
+
 
 class SantoriniStructure:
-    """Santorini game structure class"""
 
-    def __init__(self, level=0) -> None:
-        self._level = level
+    def __init__(self) -> None:
+        self._level = 0
+
+    def build(self) -> None:
+        self._level += 1
 
     def __str__(self) -> str:
         return f'{self._level}'
