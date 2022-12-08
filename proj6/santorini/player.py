@@ -1,17 +1,23 @@
 from abc import ABC, abstractmethod
-from .worker import SantoriniWorker
+from .architect import SantoriniArchitect
 
 class SantoriniPlayer(ABC):
 
-    def __init__(self, col: str, workers: list[SantoriniWorker]) -> None:
+    def __init__(self, col: str) -> None:
         super().__init__()
         self._col = col
-        self._workers = workers
+
+    def _get_color(self) -> str:
+        return self._col
+    
+    col = property(_get_color)
+
+    def get_architects(self, board) -> list[SantoriniArchitect]:
+        return board.get_architects(self._col)
 
     def __str__(self) -> str:
-        workers = ''.join([str(worker) for worker in self._workers])
-        return f'{self._col} ({workers})'
+        return f'{self._col}'
 
     @abstractmethod
-    def take_turn(self):
+    def take_turn(self, board):
         pass
