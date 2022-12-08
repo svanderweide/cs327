@@ -2,13 +2,17 @@ from .board_tile import SantoriniBoardTile
 
 class SantoriniBoard:
 
-    def __init__(self, dim: tuple=None) -> None:
-        self._dim: tuple = dim if dim else (5,5)
-        self._tiles: list = self._create_tiles()
+    def __init__(self, dim: tuple) -> None:
+        self._dim = dim
+        self._tiles = self._create_tiles()
 
-    def _create_tiles(self) -> list:
-        row = [SantoriniBoardTile() for _ in range(self._dim[1])]
-        tiles = [list(row) for _ in range(self._dim[0])]
+    def _create_tiles(self) -> list[list[SantoriniBoardTile]]:
+        tiles = []
+        for _ in range(self._dim[0]):
+            row = []
+            for _ in range(self._dim[1]):
+                row.append(SantoriniBoardTile())
+            tiles.append(row)
         return tiles
 
     def __str__(self) -> str:
