@@ -1,7 +1,6 @@
-"""tests the SantoriniStructure class"""
+"""SantoriniStructure testing module"""
 
 import unittest
-from unittest.mock import Mock, patch
 
 from santorini.structure import SantoriniStructure
 

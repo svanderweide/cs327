@@ -1,9 +1,11 @@
+"""SantoriniWorker testing module"""
+
 import unittest
 from unittest.mock import Mock, patch
 
 from santorini.worker import SantoriniWorker
 
-class TestUnit(unittest.TestCase):
+class TestCore(unittest.TestCase):
 
     def setUp(self) -> None:
         self.worker1 = SantoriniWorker('white', 'A')
