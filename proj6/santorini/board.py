@@ -9,6 +9,10 @@ class SantoriniBoard:
     def __init__(self, dim: tuple) -> None:
         self._dim = dim
         self._tiles = self._create_tiles()
+        self._workers = self._create_workers()
+
+    def _get_tile(self, location: tuple) -> SantoriniTile:
+        return self._tiles[location[0]][location[1]]
     
     def _create_tiles(self) -> list[list[SantoriniTile]]:
         
@@ -20,8 +24,23 @@ class SantoriniBoard:
             tiles.append(row)
         return tiles
 
-    def _get_tile(self, location: tuple) -> SantoriniTile:
-        return self._tiles[location[0]][location[1]]
+    # only works for 2-player CLI version
+    def _create_workers(self) -> list[SantoriniWorker]:
+
+        worker1 = SantoriniWorker('white', 'A')
+        self.worker_move(worker1, (3, 1))
+
+        worker2 = SantoriniWorker('white', 'B')
+        self.worker_move(worker2, (1, 3))
+
+        worker3 = SantoriniWorker('blue', 'Y')
+        self.worker_move(worker3, (1, 1))
+
+        worker4 = SantoriniWorker('blue', 'Z')
+        self.worker_move(worker4, (3, 3))
+
+        return [worker1, worker2, worker3, worker4]
+
     
     def worker_move(self, worker: SantoriniWorker, direction: tuple):
 
