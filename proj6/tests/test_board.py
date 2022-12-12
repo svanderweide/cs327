@@ -23,11 +23,11 @@ class TestCore(unittest.TestCase):
         board = ('+--+--+--+--+--+',
                  '|0 |0 |0 |0 |0 |',
                  '+--+--+--+--+--+',
-                 '|0 |0 |0 |0 |0 |',
+                 '|0 |0Y|0 |0B|0 |',
                  '+--+--+--+--+--+',
                  '|0 |0 |0 |0 |0 |',
                  '+--+--+--+--+--+',
-                 '|0 |0 |0 |0 |0 |',
+                 '|0 |0A|0 |0Z|0 |',
                  '+--+--+--+--+--+',
                  '|0 |0 |0 |0 |0 |',
                  '+--+--+--+--+--+')
@@ -38,27 +38,27 @@ class TestMove(unittest.TestCase):
 
     def setUp(self) -> None:
         self.board = SantoriniBoard((5, 5))
-        self.worker = SantoriniWorker('white', 'A')
+        self.worker = SantoriniWorker('white', '$')
 
     def test_board_worker_move_tile_update(self):
-        tile: SantoriniTile = self.board._get_tile((1, 1))
-        self.board.worker_move(self.worker, (1, 1))
+        tile: SantoriniTile = self.board._get_tile((2, 2))
+        self.board.worker_move(self.worker, (2, 2))
         self.assertEqual(tile.worker, self.worker)
 
     def test_board_worker_move_worker_update(self):
-        self.board.worker_move(self.worker, (1, 1))
-        self.assertEqual(self.worker.location, (1, 1))
+        self.board.worker_move(self.worker, (2, 2))
+        self.assertEqual(self.worker.location, (2, 2))
 
     def test_board_worker_move_board_str(self):
-        self.board.worker_move(self.worker, (1, 1))
+        self.board.worker_move(self.worker, (2, 2))
         board = ('+--+--+--+--+--+',
                  '|0 |0 |0 |0 |0 |',
                  '+--+--+--+--+--+',
-                 '|0 |0A|0 |0 |0 |',
+                 '|0 |0Y|0 |0B|0 |',
                  '+--+--+--+--+--+',
-                 '|0 |0 |0 |0 |0 |',
+                 '|0 |0 |0$|0 |0 |',
                  '+--+--+--+--+--+',
-                 '|0 |0 |0 |0 |0 |',
+                 '|0 |0A|0 |0Z|0 |',
                  '+--+--+--+--+--+',
                  '|0 |0 |0 |0 |0 |',
                  '+--+--+--+--+--+')
@@ -79,24 +79,26 @@ class TestBuild(unittest.TestCase):
 
     def setUp(self) -> None:
         self.board = SantoriniBoard((5, 5))
-        self.worker = SantoriniWorker('white', 'A')
+        self.worker = SantoriniWorker('white', '$')
     
     def test_board_worker_build_tile_update(self):
-        tile = self.board._get_tile((1, 1))
+        tile = self.board._get_tile((2, 2))
+        self.board.worker_move(self.worker, (1, 2))
         with patch.object(tile, 'build') as mock_build:
-            self.board.worker_build(self.worker, (1, 1))
+            self.board.worker_build(self.worker, (1, 0))
             mock_build.assert_called_once()
 
     def test_board_worker_build_board_str(self):
-        self.board.worker_build(self.worker, (1, 1))
+        self.board.worker_move(self.worker, (1, 2))
+        self.board.worker_build(self.worker, (1, 0))
         board = ('+--+--+--+--+--+',
                  '|0 |0 |0 |0 |0 |',
                  '+--+--+--+--+--+',
-                 '|0 |1 |0 |0 |0 |',
+                 '|0 |0Y|0$|0B|0 |',
                  '+--+--+--+--+--+',
-                 '|0 |0 |0 |0 |0 |',
+                 '|0 |0 |1 |0 |0 |',
                  '+--+--+--+--+--+',
-                 '|0 |0 |0 |0 |0 |',
+                 '|0 |0A|0 |0Z|0 |',
                  '+--+--+--+--+--+',
                  '|0 |0 |0 |0 |0 |',
                  '+--+--+--+--+--+')
