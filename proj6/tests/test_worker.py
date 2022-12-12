@@ -20,7 +20,7 @@ class TestCore(unittest.TestCase):
         self.assertEqual(str(self.worker1), 'A')
 
     def test_worker_default_location(self):
-        self.assertEqual(self.worker1.location, ())
+        self.assertEqual(self.worker1.location, (0, 0))
 
     def test_worker_set_location(self):
         location = (5, 4)

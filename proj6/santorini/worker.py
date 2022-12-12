@@ -5,7 +5,7 @@ class SantoriniWorker:
     def __init__(self, col: str, name: str) -> None:
         self._col = col
         self._name = name
-        self._location = tuple()
+        self._location = (0, 0)
     
     def _get_location(self) -> tuple:
         return self._location
