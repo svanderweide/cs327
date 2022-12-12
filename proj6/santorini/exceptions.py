@@ -9,14 +9,8 @@ class SantoriniException(Exception):
 
 class InvalidMoveException(SantoriniException):
     """Exception that is raised for an invalid move"""
-
-    def __init__(self, direction: str, *args: object) -> None:
-        super().__init__(*args)
-        self.direction = direction
+    pass
 
 class InvalidBuildException(SantoriniException):
     """Exception that is raised for an invalid build"""
-
-    def __init__(self, direction: str, *args: object) -> None:
-        super().__init__(*args)
-        self.direction = direction
+    pass
