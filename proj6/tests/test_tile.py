@@ -11,16 +11,21 @@ from santorini.exceptions import InvalidBuildException, InvalidMoveException
 class TestCore(unittest.TestCase):
 
     def setUp(self):
-        self._tile = SantoriniTile()
+        self.tile = SantoriniTile()
 
     def test_tile_initial_worker(self):
-        self.assertIsNone(self._tile._worker)
+        self.assertIsNone(self.tile._worker)
 
     def test_tile_initial_structure(self):
-        self.assertEqual(str(self._tile._structure), str(SantoriniStructure()))
+        self.assertEqual(str(self.tile._structure), str(SantoriniStructure()))
 
     def test_tile_initial_str(self):
-        self.assertEqual(str(self._tile), '0 ')
+        self.assertEqual(str(self.tile), '0 ')
+
+    def test_tile_reaches(self):
+        with patch.object(self.tile._structure, 'reaches', return_value=True) as mock_reaches:
+            self.tile.reaches(self.tile)
+            mock_reaches.assert_called_once()
 
 class TestMove(unittest.TestCase):
 

@@ -19,12 +19,15 @@ class SantoriniTile():
                 raise InvalidMoveException()
         self._worker = worker
     
+    worker = property(_get_worker, _set_worker)
+    
     def build(self) -> None:
         if self.worker or self._structure.domed():
             raise InvalidBuildException()
         self._structure.build()
     
-    worker = property(_get_worker, _set_worker)
+    def reaches(self, other) -> bool:
+        return self._structure.reaches(other._structure)
 
     def __str__(self) -> str:
         tile = ''
