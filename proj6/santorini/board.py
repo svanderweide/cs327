@@ -32,11 +32,18 @@ class SantoriniBoard:
             tiles.append(row)
         return tiles
 
-    # only works for 2-player CLI version
+    # loads from constants file for 2-player CLI version
     def _create_workers(self) -> list[SantoriniWorker]:
 
-        worker1 = SantoriniWorker('white', 'A')
-        self.worker_move(worker1, (3, 1))
+        workers = []
+        for template in WORKERS:
+            col  = template['col']
+            name = template['name']
+            pos  = template['pos']
+            worker = SantoriniWorker(col, name)
+            self.worker_move(worker, pos)
+            workers.append(worker)
+        return workers
 
         worker2 = SantoriniWorker('white', 'B')
         self.worker_move(worker2, (1, 3))
