@@ -11,6 +11,8 @@ DIRECTIONS = {
     'nw': (-1, -1)
 }
 
+PLAYERS = [ 'white', 'blue' ]
+
 # specific to the 2-player CLI version
 WORKERS = [ { 'col': 'white', 'name': 'A', 'pos': (3, 1) },
             { 'col': 'white', 'name': 'B', 'pos': (1, 3) },
