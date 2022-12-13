@@ -6,29 +6,44 @@ the state of the game for termination conditions
 """
 
 from santorini.board import SantoriniBoard
+from santorini.player import SantoriniPlayerBase
+from santorini.player_human import SantoriniPlayerHuman
+from santorini.player_random import SantoriniPlayerRandom
+from santorini.player_heuristic import SantoriniPlayerHeuristic
+
 from santorini.constants import PLAYERS
 from santorini.exceptions import SantoriniException
 
 class SantoriniGame():
 
     def __init__(self, **kwargs) -> None:
-        self._board = SantoriniBoard((5, 5))
         self._players = self._create_players(**kwargs)
+        self._board = SantoriniBoard((5, 5))
 
-    def _create_players(self, **kwargs):
+    def _create_players(self, **kwargs) -> list[SantoriniPlayerBase]:
 
         players = []
-        for color in PLAYERS:
-            strategy = kwargs.get(color)
+
+        # hard-coded for 2-player CLI version
+        cols = ['white', 'blue']
+
+        # rest is not hard-coded for 2-player CLI version
+        # but depends on the hard-coded values for structure
+        strategies = {col: kwargs.get(col) for col in cols}
+
+        for col, strategy in strategies.items():
             if strategy == 'human':
-                pass
+                player = SantoriniPlayerHuman(col)
             elif strategy == 'random':
-                pass
+                player = SantoriniPlayerRandom(col)
             elif strategy == 'heuristic':
-                pass
+                player = SantoriniPlayerHeuristic(col)
             else:
-                raise SantoriniException()
+                player = None
+            players.append(player)
+
         return players
 
     def run(self) -> None:
+        print(self._players)
         print(self._board)
