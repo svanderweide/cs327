@@ -2,7 +2,7 @@
 
 from .tile import SantoriniTile
 from .worker import SantoriniWorker
-from .constants import DIRECTIONS
+from .constants import WORKERS, DIRECTIONS
 from .exceptions import InvalidBuildException, InvalidMoveException
 
 class FixedWidthList(list):
@@ -45,11 +45,21 @@ class SantoriniBoard:
             workers.append(worker)
         return workers
 
-        worker2 = SantoriniWorker('white', 'B')
-        self.worker_move(worker2, (1, 3))
+    def get_valid_moves(self, name: str) -> list[(str, tuple)]:
 
-        worker3 = SantoriniWorker('blue', 'Y')
-        self.worker_move(worker3, (1, 1))
+        worker = [worker for worker in self._workers if worker._name == name][0]
+
+        valid_moves = []
+        for direction in DIRECTIONS.values():
+            try:
+                self.worker_move(worker, direction)
+            except InvalidMoveException:
+                continue
+            else:
+                self.worker_move(worker, tuple(-val for val in direction))
+                valid_moves.append((worker._name, direction))
+        return valid_moves
+
 
         worker4 = SantoriniWorker('blue', 'Z')
         self.worker_move(worker4, (3, 3))
