@@ -2,7 +2,15 @@
 
 from .tile import SantoriniTile
 from .worker import SantoriniWorker
+from .constants import DIRECTIONS
 from .exceptions import InvalidBuildException, InvalidMoveException
+
+class FixedWidthList(list):
+
+    def __getitem__(self, idx):
+        if idx < 0:
+            raise IndexError(f'Expected positive index: got {idx}')
+        return super().__getitem__(idx)
 
 class SantoriniBoard:
 
@@ -41,21 +49,24 @@ class SantoriniBoard:
 
         return [worker1, worker2, worker3, worker4]
 
-    
-    def worker_move(self, worker: SantoriniWorker, direction: tuple):
+    def worker_move(self, worker: SantoriniWorker, direction: tuple) -> None:
 
         src_location = worker.location
         dst_location = tuple(i + j for i,j in zip(src_location, direction))
 
+        src_tile = self._get_tile(src_location)
         try:
             dst_tile = self._get_tile(dst_location)
         except IndexError:
             raise InvalidMoveException()
         else:
+            if not src_tile.reaches(dst_tile):
+                raise InvalidMoveException()
             dst_tile.worker = worker
+            src_tile.worker = None
             worker.location = dst_location
 
-    def worker_build(self, worker: SantoriniWorker, direction: tuple):
+    def worker_build(self, worker: SantoriniWorker, direction: tuple) -> None:
 
         src_location = worker.location
         dst_location = tuple(i + j for i,j in zip(src_location, direction))
@@ -83,10 +94,3 @@ class SantoriniBoard:
             board += row_division
 
         return board
-
-class FixedWidthList(list):
-
-    def __getitem__(self, idx):
-        if idx < 0:
-            raise IndexError(f'Expected positive index: got {idx}')
-        return super().__getitem__(idx)

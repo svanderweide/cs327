@@ -75,6 +75,14 @@ class TestMove(unittest.TestCase):
         with self.assertRaises(InvalidMoveException):
             self.board.worker_move(self.worker, (0, -1))
 
+    def test_board_worker_move_exception_too_high(self):
+        self.board.worker_move(self.worker, (0, 0))
+        tile: SantoriniTile = self.board._get_tile((0, 1))
+        for _ in range(2):
+            tile.build()
+        with self.assertRaises(InvalidMoveException):
+            self.board.worker_move(self.worker, (0, 1))
+
 class TestBuild(unittest.TestCase):
 
     def setUp(self) -> None:
