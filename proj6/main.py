@@ -5,7 +5,7 @@ main module for Santorini clone
 """
 
 from argparse import ArgumentParser
-from santorini.game import SantoriniGame
+from santorini.SantoriniCLI import SantoriniCLI
 
 def parse() -> dict[str, str]:
     """Parse the CLI arguments and return them as a dict"""
@@ -49,8 +49,8 @@ def main() -> None:
     """Main function called when the program is invoked via CLI"""
 
     args: dict[str, str] = parse()
-    game = SantoriniGame(**args)
-    game.run()
+    CLI = SantoriniCLI(**args)
+    CLI.run()
 
 if __name__ == '__main__':
     main()
