@@ -1,5 +1,7 @@
 """Santorini board module"""
 
+from re import match
+
 from .tile import SantoriniTile
 from .worker import SantoriniWorker
 from .player import SantoriniPlayerBase
@@ -30,10 +32,18 @@ class SantoriniBoard:
         for worker in self._workers:
             self._worker_move(worker, (0, 0))
 
-    def get_worker_names(self, player: SantoriniPlayerBase) -> list[str]:
+    def check_termination(self, player: SantoriniPlayerBase) -> bool:
 
-        workers = [worker for worker in self._workers if worker.col == player.col]
-        names = [worker.name for worker in workers]
+        for worker in self._workers:
+            tile = self._get_tile(worker.location)
+            if tile.is_victory_level():
+                return True
+
+        return not bool(self.get_valid_moves(player))
+
+    def get_worker_names(self, player: SantoriniPlayerBase=None) -> list[str]:
+        col = player.col if player else ''
+        names = [worker.name for worker in self._workers if match(col, worker.col)]
         return names
 
     def implement_move(self, chosen: tuple[str, str, str]):
@@ -102,7 +112,7 @@ class SantoriniBoard:
         dst_tile = self._get_tile(dst)
 
         if not src_tile.reaches(dst_tile): return False
-        if dst_tile.occupied(): return False
+        if dst_tile.is_occupied(): return False
 
         return True
 
@@ -113,7 +123,7 @@ class SantoriniBoard:
 
         dst_tile = self._get_tile(dst)
 
-        if dst_tile.occupied(): return False
+        if dst_tile.is_occupied(): return False
 
         return True
 
