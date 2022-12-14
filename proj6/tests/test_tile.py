@@ -5,8 +5,6 @@ from unittest.mock import Mock, patch
 
 from santorini.tile import SantoriniTile
 from santorini.worker import SantoriniWorker
-from santorini.structure import SantoriniStructure
-from santorini.exceptions import InvalidBuildException, InvalidMoveException
 
 class TestCore(unittest.TestCase):
 
@@ -16,80 +14,49 @@ class TestCore(unittest.TestCase):
     def test_tile_initial_worker(self):
         self.assertIsNone(self.tile._worker)
 
-    def test_tile_initial_structure(self):
-        self.assertEqual(str(self.tile._structure), str(SantoriniStructure()))
+    def test_tile_initial_level(self):
+        self.assertEqual(self.tile._level, 0)
 
     def test_tile_initial_str(self):
         self.assertEqual(str(self.tile), '0 ')
 
-    def test_tile_reaches(self):
-        with patch.object(self.tile._structure, 'reaches', return_value=True) as mock_reaches:
-            self.tile.reaches(self.tile)
-            mock_reaches.assert_called_once()
-
-class TestMove(unittest.TestCase):
-
-    def setUp(self):
-        self.tile = SantoriniTile()
-        self.worker1 = Mock(SantoriniWorker)
+    def test_tile_worker_get(self):
+        self.assertIsNone(self.tile.worker)
     
-    def test_tile_set_worker(self):
-        self.tile.worker = self.worker1
-        self.assertEqual(self.tile.worker, self.worker1)
-
-    def test_tile_set_worker_no_exception(self):
-        try:
-            self.tile.worker = self.worker1
-        except InvalidMoveException:
-            self.assertTrue(False)
-
-    def test_tile_set_worker_None(self):
-        try:
-            self.tile.worker = None
-        except InvalidMoveException:
-            self.assertTrue(False)
-
-    def test_tile_set_worker_None_occupied(self):
-        self.tile.worker = self.worker1
-        try:
-            self.tile.worker = None
-        except InvalidMoveException:
-            self.assertTrue(False)
-
-    def test_tile_set_worker_None_domed(self):
-        with patch.object(self.tile._structure, 'domed', return_value=True):
-            try:
-                self.tile.worker = None
-            except InvalidMoveException:
-                self.assertTrue(False)
-
-    def test_tile_set_worker_exception_occupied(self):
-        self.tile.worker = self.worker1
-        with self.assertRaises(InvalidMoveException):
-            self.tile.worker = self.worker1
-    
-    def test_tile_set_worker_exception_domed(self):
-        with patch.object(self.tile._structure, 'domed', return_value=True):
-            with self.assertRaises(InvalidMoveException):
-                self.tile.worker = self.worker1
-
-class TestBuild(unittest.TestCase):
-
-    def setUp(self):
-        self.tile = SantoriniTile()
-        self.worker1 = Mock(SantoriniWorker)
+    def test_tile_worker_set(self):
+        work = Mock(SantoriniWorker)
+        self.tile.worker = work
+        self.assertEqual(self.tile.worker, work)
     
     def test_tile_build(self):
-        with patch.object(self.tile._structure, 'build') as mock_build:
-            self.tile.build()
-            mock_build.assert_called_once()   
+        level = self.tile._level
+        self.tile.build()
+        self.assertEqual(self.tile._level, level + 1)
 
-    def test_tile_build_exception_occupied(self):
-        self.tile.worker = self.worker1
-        with self.assertRaises(InvalidBuildException):
-            self.tile.build()
+    def test_tile_undo_build(self):
+        level = self.tile._level
+        self.tile.build()
+        self.tile.undo_build()
+        self.assertEqual(self.tile._level, level)
+
+class TestMultiple(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.tile1 = SantoriniTile()
+        self.tile2 = SantoriniTile()
+
+    def test_tile_reaches_same_level(self):
+        self.assertTrue(self.tile1.reaches(self.tile2))
+
+    def test_tile_reaches_up_1(self):
+        self.tile2.build()
+        self.assertTrue(self.tile1.reaches(self.tile2))
     
-    def test_tile_build_exception_domed(self):
-        with patch.object(self.tile._structure, 'domed', return_value=True):
-            with self.assertRaises(InvalidBuildException):
-                self.tile.build()
+    def test_tile_reaches_up_2(self):
+        self.tile2.build()
+        self.tile2.build()
+        self.assertFalse(self.tile1.reaches(self.tile2))
+
+    def test_tile_reaches_down_max(self):
+        self.tile1._level = SantoriniTile._limit_level
+        self.assertTrue(self.tile1.reaches(self.tile2))
