@@ -8,8 +8,8 @@ basic Santorini game required by hw6 with easy extension if additional are desir
 from abc import ABC, abstractmethod
 from random import choice
 
-from santorini.worker import SantoriniWorker
-from santorini.constants import DIRECTIONS
+from .worker import SantoriniWorker
+from .constants import DIRECTIONS
 
 
 class SantoriniPlayerBase(ABC):

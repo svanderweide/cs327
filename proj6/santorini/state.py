@@ -8,9 +8,9 @@ and allows extensions to new interfaces with minimal changes
 import sys
 from abc import ABC, abstractmethod
 
-from santorini.board import SantoriniBoard
-from santorini.worker import SantoriniWorker
-from santorini.player import (SantoriniPlayerHuman, SantoriniPlayerRandom, SantoriniPlayerHeuristic)
+from .board import SantoriniBoard
+from .worker import SantoriniWorker
+from .player import (SantoriniPlayerHuman, SantoriniPlayerRandom, SantoriniPlayerHeuristic)
 
 
 class SantoriniStateBase(ABC):
@@ -83,9 +83,6 @@ class SantoriniStateInitial(SantoriniStateBase):
         # create board and players
         self.context.board = SantoriniBoard(workers=self._create_workers())
         self.context.players = self._create_players(self._context.args)
-
-        # print complete message
-        print('Initial state complete')
 
         # transition to next state
         self.context.transition_to(SantoriniStateTurn(0))

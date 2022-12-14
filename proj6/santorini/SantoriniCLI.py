@@ -5,7 +5,7 @@ Responsible for setting up, launching, and monitoring
 the state of the game for termination conditions
 """
 
-from santorini.state import (SantoriniStateBase, SantoriniStateInitial)
+from .state import (SantoriniStateBase, SantoriniStateInitial)
 
 class SantoriniCLI():
 
