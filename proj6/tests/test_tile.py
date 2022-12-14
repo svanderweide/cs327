@@ -4,7 +4,6 @@ import unittest
 from unittest.mock import Mock, patch
 
 from santorini.tile import SantoriniTile
-from santorini.worker import SantoriniWorker
 
 class TestCore(unittest.TestCase):
 
@@ -24,7 +23,7 @@ class TestCore(unittest.TestCase):
         self.assertIsNone(self.tile.worker)
     
     def test_tile_worker_set(self):
-        work = Mock(SantoriniWorker)
+        work = Mock()
         self.tile.worker = work
         self.assertEqual(self.tile.worker, work)
 
@@ -33,7 +32,7 @@ class TestCore(unittest.TestCase):
         self.assertEqual(str(self.tile), '1 ')
 
     def test_tile_str_worker(self):
-        work = Mock(SantoriniWorker)
+        work = Mock()
         with patch.object(work, '__str__', return_value='A'):
             self.tile.worker = work
             self.assertEqual(str(self.tile), '0A')

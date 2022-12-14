@@ -8,21 +8,21 @@ from santorini.worker import SantoriniWorker
 class TestCore(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.worker1 = SantoriniWorker('white', 'A')
+        self.worker = SantoriniWorker('white', 'A')
 
     def test_worker_col(self):
-        self.assertEqual(self.worker1._col, 'white')
+        self.assertEqual(self.worker._col, 'white')
 
     def test_worker_name(self):
-        self.assertEqual(self.worker1._name, 'A')
+        self.assertEqual(self.worker._name, 'A')
 
     def test_worker_str(self):
-        self.assertEqual(str(self.worker1), 'A')
+        self.assertEqual(str(self.worker), 'A')
 
     def test_worker_default_location(self):
-        self.assertEqual(self.worker1.location, (0, 0))
+        self.assertEqual(self.worker.location, (0, 0))
 
     def test_worker_set_location(self):
         location = (5, 4)
-        self.worker1.location = location
-        self.assertEqual(self.worker1.location, location)
+        self.worker.location = location
+        self.assertEqual(self.worker.location, location)

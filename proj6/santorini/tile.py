@@ -24,6 +24,9 @@ class SantoriniTile():
     def undo_build(self) -> None:
         self._level -= 1
 
+    def occupied(self) -> bool:
+        return self.worker or self._level == SantoriniTile._limit_level
+
     def reaches(self, other) -> bool:
         return other._level - self._level <= 1
 

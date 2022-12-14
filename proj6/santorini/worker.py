@@ -15,5 +15,15 @@ class SantoriniWorker:
     
     location = property(_get_location, _set_location)
 
+    def _get_col(self) -> str:
+        return self._col
+
+    col = property(_get_col)
+
+    def _get_name(self) -> str:
+        return self._name
+
+    name = property(_get_name)
+
     def __str__(self) -> str:
         return f'{self._name}'
