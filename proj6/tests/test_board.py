@@ -138,3 +138,46 @@ class TestValidation(unittest.TestCase):
 
     def test_board_validate_build_invalid_occupied_worker(self):
         self.assertFalse(self.board._validate_build(self.src))
+
+class TestInteraction(unittest.TestCase):
+
+    def setUp(self) -> None:
+        worker1 = SantoriniWorker('white', 'A', (3, 1))
+        worker2 = SantoriniWorker('white', 'B', (1, 3))
+        worker3 = SantoriniWorker('blue', 'Y', (1, 1))
+        worker4 = SantoriniWorker('blue', 'Z', (3, 3))
+        self.workers = [worker1, worker2, worker3, worker4]
+        self.board = SantoriniBoard(workers=self.workers)
+    
+    def test_board_str_init_workers(self):
+        board = ('+--+--+--+--+--+',
+                 '|0 |0 |0 |0 |0 |',
+                 '+--+--+--+--+--+',
+                 '|0 |0Y|0 |0B|0 |',
+                 '+--+--+--+--+--+',
+                 '|0 |0 |0 |0 |0 |',
+                 '+--+--+--+--+--+',
+                 '|0 |0A|0 |0Z|0 |',
+                 '+--+--+--+--+--+',
+                 '|0 |0 |0 |0 |0 |',
+                 '+--+--+--+--+--+')
+        board = '\n'.join(board)
+        self.assertEqual(str(self.board), board)
+
+    def test_board_get_worker_moves(self):
+        worker = SantoriniWorker('white', '%', (2, 2))
+        self.board._worker_move(worker, (0, 0))
+        moves = [('%', 'n', 'n'),  ('%', 'n', 'ne'),
+                 ('%', 'n', 'se'), ('%', 'n', 's'),
+                 ('%', 'n', 'sw'), ('%', 'n', 'nw'),
+                 ('%', 'e', 'ne'), ('%', 'e', 'e'),
+                 ('%', 'e', 'se'), ('%', 'e', 'sw'),
+                 ('%', 'e', 'w'),  ('%', 'e', 'nw'),
+                 ('%', 's', 'n'),  ('%', 's', 'ne'),
+                 ('%', 's', 'se'), ('%', 's', 's'),
+                 ('%', 's', 'sw'), ('%', 's', 'nw'),
+                 ('%', 'w', 'ne'), ('%', 'w', 'e'),
+                 ('%', 'w', 'se'), ('%', 'w', 'sw'),
+                 ('%', 'w', 'w'),  ('%', 'w', 'nw'),]
+        self.assertEqual(self.board._get_worker_moves(worker), moves)
+        
