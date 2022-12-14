@@ -27,6 +27,16 @@ class TestCore(unittest.TestCase):
         work = Mock(SantoriniWorker)
         self.tile.worker = work
         self.assertEqual(self.tile.worker, work)
+
+    def test_tile_str_level(self):
+        self.tile._level = 1
+        self.assertEqual(str(self.tile), '1 ')
+
+    def test_tile_str_worker(self):
+        work = Mock(SantoriniWorker)
+        with patch.object(work, '__str__', return_value='A'):
+            self.tile.worker = work
+            self.assertEqual(str(self.tile), '0A')
     
     def test_tile_build(self):
         level = self.tile._level
