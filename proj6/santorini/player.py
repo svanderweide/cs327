@@ -19,9 +19,10 @@ class SantoriniPlayerBase(ABC):
     Abstract player class with abstract method for taking a turn
     """
 
-    def __init__(self, col: str) -> None:
+    def __init__(self, col: str, names: list[str]) -> None:
         super().__init__()
         self._col = col
+        self._names = names
 
     def _get_col(self) -> str:
         return self._col
@@ -29,13 +30,15 @@ class SantoriniPlayerBase(ABC):
     col = property(_get_col)
 
     @abstractmethod
-    def _make_choice(self, valid_moves: list[tuple[str, str, str]]) -> None:
+    def _make_choice(self, board) -> None:
         pass
 
     def take_turn(self, board) -> None:
-        valid_moves = board.get_valid_moves(self)
-        choice = self._make_choice(valid_moves)
-        print(','.join(choice))
+
+        # select worker, move, and build (subclass-defined)
+        choice: tuple[str, str, str] = self._make_choice(board)
+
+        # implement the move on the board
         board.implement_move(choice)
 
     def print_description(self, board) -> None:
@@ -55,21 +58,29 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
     Concrete player class that prompts the user to choose a move
     """
 
-    def _select_worker(self, valid_moves: list[tuple[str, str, str]]) -> tuple[str, list[tuple[str, str, str]]]:
+    def _select_worker(self, valid_moves, board) -> tuple[str, list[tuple[str, str, str]]]:
 
         def filter_move(move: tuple[str, str, str]):
             return chosen_worker == move[0]
 
+        all_workers = board.get_worker_names()
+
         while True:
             print('Select a worker to move')
             chosen_worker = input()
+            if chosen_worker not in all_workers:
+                print('Not a valid worker')
+                continue
+            elif chosen_worker not in self._names:
+                print('That is not your worker')
+                continue
             filtered_moves = [move for move in valid_moves if filter_move(move)]
             if filtered_moves:
                 break
 
         return chosen_worker, filtered_moves
 
-    def _select_move(self, valid_moves: list[tuple[str, str, str]]) -> tuple[str, list[tuple[str, str, str]]]:
+    def _select_move(self, valid_moves) -> tuple[str, list[tuple[str, str, str]]]:
 
         def filter_move(move: tuple[str, str, str]):
             return chosen_move == move[1]
@@ -88,7 +99,7 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
         
         return chosen_move, filtered_moves
 
-    def _select_build(self, valid_moves: list[tuple[str, str, str]]) -> tuple[str, list[tuple[str, str, str]]]:
+    def _select_build(self, valid_moves) -> tuple[str, list[tuple[str, str, str]]]:
 
         def filter_move(move: tuple[str, str, str]):
             return chosen_build == move[2]
@@ -96,6 +107,9 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
         while True:
             print('Select a direction to build (n, ne, e, se, s, sw, w, nw)')
             chosen_build = input()
+            if chosen_build not in DIRECTIONS.keys():
+                print('Not a valid direction')
+                continue
             filtered_moves = [move for move in valid_moves if filter_move(move)]
             if filtered_moves:
                 break
@@ -104,8 +118,9 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
 
         return chosen_build, filtered_moves
 
-    def _make_choice(self, valid_moves: list[tuple[str, str, str]]) -> tuple[str, str, str]:
-        chosen_worker, valid_moves = self._select_worker(valid_moves)
+    def _make_choice(self, board) -> tuple[str, str, str]:
+        valid_moves = board.get_valid_moves(self)
+        chosen_worker, valid_moves = self._select_worker(valid_moves, board)
         chosen_move,   valid_moves = self._select_move(valid_moves)
         chosen_build,  valid_moves = self._select_build(valid_moves)
         return chosen_worker, chosen_move, chosen_build
@@ -118,8 +133,11 @@ class SantoriniPlayerRandom(SantoriniPlayerBase):
     Concrete player class that selects a move at random
     """
 
-    def _make_choice(self, valid_moves: list[tuple[str, str, str]]) -> tuple[str, str, str]:
-        return choice(valid_moves)
+    def _make_choice(self, board) -> tuple[str, str, str]:
+        valid_moves = board.get_valid_moves(self)
+        chosen = choice(valid_moves)
+        print(','.join(chosen))
+        return chosen
 
 
 class SantoriniPlayerHeuristic(SantoriniPlayerBase):
