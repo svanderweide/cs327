@@ -1,8 +1,20 @@
-"""Santorini board tile module"""
+"""
+Tile module
+-----------
+Implements the tile class responsible for maintaining a single tile
+on the Santorini game board with same validation logic embedded
+"""
 
 from .worker import SantoriniWorker
 
 class SantoriniTile():
+    """
+    SantoriniTile
+    -------------
+    Maintains and allows access (through certain methods) to its
+    current height, state of occupancy, and occupant (i.e., worker)
+    for the game board to print itself and to perform move validation
+    """
 
     _limit_level = 4
 
@@ -15,27 +27,28 @@ class SantoriniTile():
 
     def _set_worker(self, worker: SantoriniWorker) -> None:
         self._worker = worker
-    
+
     worker = property(_get_worker, _set_worker)
 
     def _get_level(self) -> int:
         return self._level
-    
+
     height_score = property(_get_level)
-    
+
     def build(self) -> None:
+        """Build on the tile"""
         self._level += 1
-        
-    def undo_build(self) -> None:
-        self._level -= 1
 
     def is_occupied(self) -> bool:
+        """Returns whether the tile has a worker or is domed"""
         return self.worker or self._level == SantoriniTile._limit_level
 
     def is_victory_level(self) -> bool:
+        """Returns whether a worker on the tile ends the game"""
         return self._level + 1 == SantoriniTile._limit_level
 
     def reaches(self, other) -> bool:
+        """Returns wheter the tile [other] is reachable from this tile"""
         return other._level - self._level <= 1
 
     def __str__(self) -> str:
