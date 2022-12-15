@@ -54,6 +54,9 @@ class SantoriniPlayerBase(ABC):
         """Used to allow the heuristic score decorator without multiple decorators"""
         return self.base_get_description(board)
 
+    def __str__(self) -> str:
+        return f'{self._col}'
+
 
 class SantoriniPlayerHuman(SantoriniPlayerBase):
     """
