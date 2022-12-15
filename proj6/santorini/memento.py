@@ -80,15 +80,15 @@ class SantoriniCaretaker:
     """
 
     def __init__(self, originator: SantoriniOriginator) -> None:
-        self._idx = -1
+        self._idx = 0
         self._mementos = []
         self._originator = originator
 
     def save(self) -> None:
         """Add the originator's current state to the collection"""
+        memento = self._originator.save()
+        self._mementos.append(memento)
         self._idx += 1
-        mem = self._originator.save()
-        self._mementos.append(mem)
 
     def undo(self) -> None:
         """Revert to the originator's previous stored state (if possible)"""
