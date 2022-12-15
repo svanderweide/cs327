@@ -91,10 +91,15 @@ class SantoriniStateInitial(SantoriniStateBase):
         self.context.players = self._create_players(self._context.args)
 
         # transition to next state
-        self.context.transition_to(SantoriniStateTurn(0))
+        self.context.transition_to(SantoriniStateRunning(0))
 
 
-class SantoriniStateTurn(SantoriniStateBase):
+class SantoriniStateRunning(SantoriniStateBase):
+    """
+    SantoriniStateRunning
+    ---------------------
+    Concrete state class used to set up and prepare to run the game
+    """
 
     def __init__(self, turn: int) -> None:
         super().__init__()
@@ -127,7 +132,7 @@ class SantoriniStateTurn(SantoriniStateBase):
         self._player.take_turn(self._context.board)
 
         # go to next turn
-        self.context.transition_to(SantoriniStateTurn(self._turn + 1))
+        self.context.transition_to(SantoriniStateRunning(self._turn + 1))
 
 
 class SantoriniStateEnd(SantoriniStateBase):

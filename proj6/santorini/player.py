@@ -60,7 +60,7 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
     def _select_worker(self, valid_moves, board) -> tuple[str, list[tuple[str, str, str]]]:
 
         def filter_move(move: tuple[str, str, str]):
-            return chosen_worker == move[0]
+            return chosen_worker == move['name']
 
         all_workers = board.get_worker_names()
 
@@ -82,7 +82,7 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
     def _select_move(self, valid_moves) -> tuple[str, list[tuple[str, str, str]]]:
 
         def filter_move(move: tuple[str, str, str]):
-            return chosen_move == move[1]
+            return chosen_move == move['move']
 
         while True:
             print('Select a direction to move (n, ne, e, se, s, sw, w, nw)')
@@ -101,7 +101,7 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
     def _select_build(self, valid_moves) -> tuple[str, list[tuple[str, str, str]]]:
 
         def filter_move(move: tuple[str, str, str]):
-            return chosen_build == move[2]
+            return chosen_build == move['build']
 
         while True:
             print('Select a direction to build (n, ne, e, se, s, sw, w, nw)')
@@ -118,11 +118,16 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
         return chosen_build, filtered_moves
 
     def _make_choice(self, board) -> tuple[str, str, str]:
+
+        # get all valid moves
         valid_moves = board.get_valid_moves(self)
-        chosen_worker, valid_moves = self._select_worker(valid_moves, board)
-        chosen_move,   valid_moves = self._select_move(valid_moves)
-        chosen_build,  valid_moves = self._select_build(valid_moves)
-        return chosen_worker, chosen_move, chosen_build
+
+        # independently select worker, move, and build
+        chosen_name, valid_moves = self._select_worker(valid_moves, board)
+        chosen_move, valid_moves = self._select_move(valid_moves)
+        chosen_build, valid_moves = self._select_build(valid_moves)
+
+        return chosen_name, chosen_move, chosen_build
 
 
 class SantoriniPlayerRandom(SantoriniPlayerBase):
@@ -133,10 +138,22 @@ class SantoriniPlayerRandom(SantoriniPlayerBase):
     """
 
     def _make_choice(self, board) -> tuple[str, str, str]:
+
+        # get all the valid moves
         valid_moves = board.get_valid_moves(self)
+
+        # randomly select move
         chosen = choice(valid_moves)
-        print(','.join(chosen))
-        return chosen
+
+        # extract components of the chosen move
+        chosen_name = chosen['name']
+        chosen_move = chosen['move']
+        chosen_build = chosen['build']
+
+        # print the move (only required for AI players)
+        print(f'{chosen_name},{chosen_move},{chosen_build}')
+
+        return chosen_name, chosen_move, chosen_build
 
 
 class SantoriniPlayerHeuristic(SantoriniPlayerBase):
@@ -146,5 +163,46 @@ class SantoriniPlayerHeuristic(SantoriniPlayerBase):
     Concrete player class that selects a move according to the move's heuristic score
     """
 
-    def _make_choice(self, valid_moves: dict[SantoriniWorker, dict[str, list[str]]]) -> None:
-        return super()._make_choice(valid_moves)
+    _multipliers = {
+        'height': 3,
+        'center': 2,
+        'distance': 1,
+    }
+
+    def _calculate_score(self, scores: tuple):
+
+        # compute the weighted heuristic scores
+        heuristic_score = 0
+        heuristic_score += scores[0] * self._multipliers['height']
+        heuristic_score += scores[1] * self._multipliers['center']
+        heuristic_score += scores[2] * self._multipliers['distance']
+
+        return heuristic_score
+
+    def _make_choice(self, board) -> tuple[str, str, str]:
+
+        # get all the valid moves (and their heuristic scores)
+        valid_moves = board.get_valid_moves(self, heuristic=True)
+
+        # compute the weighted scores
+        for move in valid_moves:
+            move['score'] = self._calculate_score(move['score'])
+
+        # calculate highest heuristic score
+        highest_heuristic_score = max(move['score'] for move in valid_moves)
+
+        # get the moves with the highest heuristic score
+        valid_moves = [move for move in valid_moves if move['score'] == highest_heuristic_score]
+
+        # randomly select remove from the remaining
+        chosen = choice(valid_moves)
+
+        # extract components of the chosen move
+        chosen_name = chosen['name']
+        chosen_move = chosen['move']
+        chosen_build = chosen['build']
+
+        # print the move (only required for AI players)
+        print(f'{chosen_name},{chosen_move},{chosen_build}')
+
+        return chosen_name, chosen_move, chosen_build

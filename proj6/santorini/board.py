@@ -1,5 +1,6 @@
 """Santorini board module"""
 
+from math import inf
 from re import match
 
 from .tile import SantoriniTile
@@ -36,7 +37,7 @@ class SantoriniBoard:
         for worker in self._workers:
             self._worker_move(worker, (0, 0))
     
-    def get_heuristic_score(self, player: SantoriniPlayerBase) -> tuple[int, int, int]:
+    def get_heuristic_score(self, player: SantoriniPlayerBase, infinite=False) -> tuple[int, int, int]:
 
         # get current location of player's workers
         player_locations = [worker.location for worker in self._workers if worker.col == player.col]
@@ -44,11 +45,13 @@ class SantoriniBoard:
         # get current location of opponent's workers
         opponent_locations = [worker.location for worker in self._workers if worker.col != player.col]
 
-        return self._calculate_heuristic_score(player_locations, opponent_locations)
+        return self._calculate_heuristic_score(player_locations, opponent_locations, infinite)
 
-    def _calculate_heuristic_score(self, player_locations, opponent_locations):
+    def _calculate_heuristic_score(self, player_locations, opponent_locations, infinite):
 
         heights = [self._get_tile(location).height_score for location in player_locations]
+        if infinite:
+            heights = [height if height != 3 else inf for height in heights]
         height_score = sum(heights)
 
         centers = [self._get_distance(location, (2, 2)) for location in player_locations]
@@ -59,8 +62,7 @@ class SantoriniBoard:
             distances.append(min([self._get_distance(loc1, loc2) for loc1 in player_locations]))
         distance_score = 8 - sum(distances)
 
-        return height_score, center_score, distance_score
-
+        return (height_score, center_score, distance_score)
 
     def check_termination(self, player: SantoriniPlayerBase) -> bool:
 
@@ -88,18 +90,21 @@ class SantoriniBoard:
         self._worker_move(worker, move_direction)
         self._worker_build(worker, build_direction)
 
-    def get_valid_moves(self, player: SantoriniPlayerBase) -> list[tuple[str, str, str]]:
+    def get_valid_moves(self, player: SantoriniPlayerBase,
+                              heuristic=False) -> list[dict]:
 
         workers = [worker for worker in self._workers if worker.col == player.col]
 
         valid_moves = []
         for worker in workers:
-            worker_moves = self._get_worker_moves(worker)
+            worker_moves = self._get_worker_moves(player, worker, heuristic)
             if worker_moves:
                 valid_moves += worker_moves
         return valid_moves
 
-    def _get_worker_moves(self, work: SantoriniWorker) -> list[tuple[str, str, str]]:
+    def _get_worker_moves(self, player: SantoriniPlayerBase,
+                                work: SantoriniWorker,
+                                heuristic: bool) -> list[dict]:
 
         worker_moves = []
 
@@ -117,6 +122,10 @@ class SantoriniBoard:
             # valid moves (early termination condition)
             if self._validate_move(src, dst1):
 
+                work.location = dst1
+                heuristic_score = self.get_heuristic_score(player, True) if heuristic else None
+                work.location = src
+
                 # possible builds
                 for dir2, tup2 in DIRECTIONS.items():
                     dst2 = tuple(i + j for i,j in zip(dst1, tup2))
@@ -124,8 +133,15 @@ class SantoriniBoard:
                     # valid builds (early termination condition)
                     if self._validate_build(dst2):
 
+                        valid_move = {
+                            'name': name,
+                            'move': dir1,
+                            'build': dir2,
+                            'score': heuristic_score
+                        }
+
                         # valid move + valid build discovered
-                        worker_moves.append((name, dir1, dir2))
+                        worker_moves.append(valid_move)
 
         # re-occupy the original space
         src_tile.worker = work
