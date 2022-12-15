@@ -1,23 +1,25 @@
 """
-decorators module for the Santorini game
+Decorators module
+-----------------
+Implements the decorators required for the Santorini game as described
+with easy extension / expansion if more decorators are required
 """
 
 from functools import wraps
-from .board import SantoriniBoard
-from .player import SantoriniPlayerBase
 
-def log_heuristic_score(fn, player: SantoriniPlayerBase, board: SantoriniBoard):
+def add_heuristic_score(func, player, board):
+    """Add the log of the heuristic score to the player's description"""
 
-    def decorate(fn):
+    def decorate(func):
 
-        @wraps(fn)
+        @wraps(func)
 
         def wrapped(*args, **kwargs):
 
-            description = fn(*args, **kwargs)
+            description = func(*args, **kwargs)
             description += f', {board.get_heuristic_score(player)}'
             return description
 
         return wrapped
 
-    return decorate(fn)
+    return decorate(func)

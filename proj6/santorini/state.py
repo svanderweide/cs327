@@ -1,6 +1,6 @@
 """
-SantoriniState module
----------------------
+State module
+------------
 Implements the various states required for a Santorini game
 and allows extensions to new interfaces with minimal changes
 """

@@ -1,6 +1,6 @@
 """
 Memento module
-----------------------
+--------------
 Implements the various classes required to save the state of the
 Santorini game with (1) undo, (2) redo, and (3) next capabilities
 """
