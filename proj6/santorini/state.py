@@ -65,7 +65,7 @@ class SantoriniStateInitial(SantoriniStateBase):
                 player = SantoriniPlayerHeuristic(template['col'], template['names'])
             players.append(player)
 
-        if args.get('score'):
+        if args.get('score') == 'on':
             board = self.context.board
             for player in players:
                 player.get_description = log_heuristic_score(player.get_description, player, board)

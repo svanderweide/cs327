@@ -27,10 +27,40 @@ class SantoriniBoard:
 
     def _get_tile(self, location: tuple) -> SantoriniTile:
         return self._tiles[location[0]][location[1]]
-    
+
+    def _get_distance(self, location1: tuple, location2: tuple) -> int:
+        diffs = [abs(loc1 - loc2) for loc1, loc2 in zip(location1, location2)]
+        return max(diffs)
+
     def _init_workers(self) -> None:
         for worker in self._workers:
             self._worker_move(worker, (0, 0))
+    
+    def get_heuristic_score(self, player: SantoriniPlayerBase) -> tuple[int, int, int]:
+
+        # get current location of player's workers
+        player_locations = [worker.location for worker in self._workers if worker.col == player.col]
+
+        # get current location of opponent's workers
+        opponent_locations = [worker.location for worker in self._workers if worker.col != player.col]
+
+        return self._calculate_heuristic_score(player_locations, opponent_locations)
+
+    def _calculate_heuristic_score(self, player_locations, opponent_locations):
+
+        heights = [self._get_tile(location).height_score for location in player_locations]
+        height_score = sum(heights)
+
+        centers = [self._get_distance(location, (2, 2)) for location in player_locations]
+        center_score = 4 - sum(centers)
+
+        distances = []
+        for loc2 in opponent_locations:
+            distances.append(min([self._get_distance(loc1, loc2) for loc1 in player_locations]))
+        distance_score = 8 - sum(distances)
+
+        return height_score, center_score, distance_score
+
 
     def check_termination(self, player: SantoriniPlayerBase) -> bool:
 
