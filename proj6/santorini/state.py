@@ -12,13 +12,14 @@ from .board import SantoriniBoard
 from .worker import SantoriniWorker
 from .player import (SantoriniPlayerHuman, SantoriniPlayerRandom, SantoriniPlayerHeuristic)
 
-from .decorators import log_heuristic_score
+from .decorators import add_heuristic_score
+from .memento import SantoriniOriginator, SantoriniCaretaker
 
 class SantoriniStateBase(ABC):
     """
     SantoriniStateBase
     ------------------
-    Abstract state class with abstract method for performing the state
+    Abstract state class with abstract method for performing the state's actions
     """
     def __init__(self) -> None:
         super().__init__()
@@ -34,6 +35,7 @@ class SantoriniStateBase(ABC):
 
     @abstractmethod
     def run(self) -> bool:
+        """Perform the action defined for the given state"""
         pass
 
 
@@ -41,15 +43,17 @@ class SantoriniStateInitial(SantoriniStateBase):
     """
     SantoriniStateInitial
     ---------------------
-    Concrete state class used to set up and prepare to run the game
+    Concrete state class responsible for setting up the game
     """
 
-    def _create_players(self, args):
+    def _create_players(self):
 
         players = []
 
+        args = self.context.args
+
         # hard-coded for 2-player CLI version
-        templates = [ 
+        templates = [
             { 'col': 'white', 'template': args.get('white'), 'names': ['A', 'B'] },
             { 'col': 'blue',  'template': args.get('blue'),  'names': ['Y', 'Z'] },
         ]
@@ -64,11 +68,6 @@ class SantoriniStateInitial(SantoriniStateBase):
             elif template['template'] == 'heuristic':
                 player = SantoriniPlayerHeuristic(template['col'], template['names'])
             players.append(player)
-
-        if args.get('score') == 'on':
-            board = self.context.board
-            for player in players:
-                player.get_description = log_heuristic_score(player.get_description, player, board)
 
         return players
 
@@ -86,73 +85,96 @@ class SantoriniStateInitial(SantoriniStateBase):
 
     def run(self) -> None:
 
-        # create board and players
-        self.context.board = SantoriniBoard(workers=self._create_workers())
-        self.context.players = self._create_players(self._context.args)
+        # create board
+        board = SantoriniBoard(workers=self._create_workers())
 
-        # transition to next state
-        self.context.transition_to(SantoriniStateRunning(0))
+        # create players
+        self.context.players = self._create_players()
+
+        # create originator and caretaker for mementos
+        self.context.originator = SantoriniOriginator(None)
+        self.context.caretaker = SantoriniCaretaker(self.context.originator)
+
+        # transition to running state
+        self.context.originator.state = 0, board
+        self.context.transition_to(SantoriniStateRunning())
 
 
 class SantoriniStateRunning(SantoriniStateBase):
     """
     SantoriniStateRunning
     ---------------------
-    Concrete state class used to set up and prepare to run the game
+    Concrete state class responsible for maintaining the ordinary loop of the game
+    and checking for the end conditions to be met for transition to next state
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._turn = None
+        self._board = None
+
+    def run(self) -> None:
+
+        self._turn, self._board = self.context.originator.state
+
+        if self.context.args.get('score') == 'on':
+            for player in self.context.players:
+                # decorate the get_description method to show the heuristic score
+                decorated = add_heuristic_score(player.base_get_description, player, self._board)
+                player.get_description = decorated
+
+        player = self.context.players[self._turn % len(self.context.players)]
+
+        # print the current turn information
+        print(self._board)
+        print(f'Turn: {self._turn + 1}, ', end='')
+        print(player.get_description(self._board))
+
+        # check for termination
+        if self._board.check_termination(player):
+            self.context.transition_to(SantoriniStateEnd(self._turn + 1))
+            return
+
+        # check for undo/redo/next (if enabled)
+        if self.context.args.get('history') == 'on':
+            while True:
+                print('undo, redo, or next')
+                option = input()
+                if option == 'undo':
+                    self.context.caretaker.undo()
+                    return
+                if option == 'redo':
+                    self.context.caretaker.redo()
+                    return
+                if option == 'next':
+                    self.context.caretaker.next()
+                    break
+                print('Invalid. Accepted options: (undo/redo/next)')
+
+        # save the state of the game before the turn
+        self.context.caretaker.save()
+
+        # player takes their turn
+        player.take_turn(self._board)
+
+        # go to next turn
+        self.context.originator.state = self._turn + 1, self._board
+
+
+class SantoriniStateEnd(SantoriniStateBase):
+    """
+    SantoriniStateEnd
+    -----------------
+    Concrete state class responsible for printing the victory message
+    and ending the game by exiting the program
     """
 
     def __init__(self, turn: int) -> None:
         super().__init__()
         self._turn = turn
-        self._player = None
-
-    def _get_context(self):
-        return super()._get_context()
-
-    def _set_context(self, context):
-        super()._set_context(context)
-        self._player = self.context.players[self._turn % len(self.context.players)]
-
-    # subclass the 'context' setter to update 'player' attribute
-    context = property(_get_context, _set_context)
 
     def run(self) -> None:
 
-        # print the current turn information
-        print(self.context.board)
-        print(f'Turn: {self._turn + 1}, ', end='')
-        print(self._player.get_description(self.context.board))
-
-        # check for termination
-        if self.context.board.check_termination(self._player):
-            self.context.transition_to(SantoriniStateEnd(self._turn + 1))
-            return
-
-        # player takes their turn
-        self._player.take_turn(self._context.board)
-
-        # go to next turn
-        self.context.transition_to(SantoriniStateRunning(self._turn + 1))
-
-
-class SantoriniStateEnd(SantoriniStateBase):
-
-    def __init__(self, turn: int) -> None:
-        super().__init__()
-        self._turn = turn
-        self._player = None
-
-    def _get_context(self):
-        return super()._get_context()
-
-    def _set_context(self, context):
-        super()._set_context(context)
-        self._player = self.context.players[self._turn % len(self.context.players)]
-
-    # subclass the 'context' setter to update 'player' attribute
-    context = property(_get_context, _set_context)
-
-    def run(self) -> None:
-
-        print(f'{self._player.col} has won')
+        player = self.context.players[self._turn % len(self.context.players)]
+        print(f'{player.col} has won')
         sys.exit(0)
