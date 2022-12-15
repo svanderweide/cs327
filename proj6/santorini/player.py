@@ -41,11 +41,10 @@ class SantoriniPlayerBase(ABC):
         # implement the move on the board
         board.implement_move(choice)
 
-    def print_description(self, board) -> None:
-        valid_moves = board.get_worker_names(self)
-        workers = set(move[0] for move in valid_moves)
-        workers = ''.join(sorted(workers))
-        print(f'{self} ({workers})')
+    def get_description(self, board) -> str:
+        worker_names = board.get_worker_names(self)
+        workers = ''.join(sorted(worker_names))
+        return f'{self} ({workers})'
 
     def __str__(self) -> str:
         return f'{self._col}'

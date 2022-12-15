@@ -12,6 +12,7 @@ from .board import SantoriniBoard
 from .worker import SantoriniWorker
 from .player import (SantoriniPlayerHuman, SantoriniPlayerRandom, SantoriniPlayerHeuristic)
 
+from .decorators import log_heuristic_score
 
 class SantoriniStateBase(ABC):
     """
@@ -64,6 +65,11 @@ class SantoriniStateInitial(SantoriniStateBase):
                 player = SantoriniPlayerHeuristic(template['col'], template['names'])
             players.append(player)
 
+        if args.get('score'):
+            board = self.context.board
+            for player in players:
+                player.get_description = log_heuristic_score(player.get_description, player, board)
+
         return players
 
     def _create_workers(self) -> list[SantoriniWorker]:
@@ -110,7 +116,7 @@ class SantoriniStateTurn(SantoriniStateBase):
         # print the current turn information
         print(self.context.board)
         print(f'Turn: {self._turn + 1}, ', end='')
-        self._player.print_description(self.context.board)
+        print(self._player.get_description(self.context.board))
 
         # check for termination
         if self.context.board.check_termination(self._player):
