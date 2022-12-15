@@ -8,7 +8,6 @@ basic Santorini game required by hw6 with easy extension if additional are desir
 from abc import ABC, abstractmethod
 from random import choice
 
-from .worker import SantoriniWorker
 from .constants import DIRECTIONS
 
 
@@ -34,20 +33,26 @@ class SantoriniPlayerBase(ABC):
         pass
 
     def take_turn(self, board) -> None:
+        """
+        Template method for a player's turn that requires the player subclasses
+        to implement the '_make_choice' method to fill in the template
+        """
 
         # select worker, move, and build (subclass-defined)
-        choice: tuple[str, str, str] = self._make_choice(board)
+        chosen: tuple[str, str, str] = self._make_choice(board)
 
         # implement the move on the board
-        board.implement_move(choice)
+        board.implement_move(chosen)
 
-    def get_description(self, board) -> str:
+    def base_get_description(self, board) -> str:
+        """Returns a description of the player for the given board"""
         worker_names = board.get_worker_names(self)
         workers = ''.join(sorted(worker_names))
         return f'{self} ({workers})'
 
-    def __str__(self) -> str:
-        return f'{self._col}'
+    def get_description(self, board) -> str:
+        """Used to allow the heuristic score decorator without multiple decorators"""
+        return self.base_get_description(board)
 
 
 class SantoriniPlayerHuman(SantoriniPlayerBase):
@@ -70,7 +75,7 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
             if chosen_worker not in all_workers:
                 print('Not a valid worker')
                 continue
-            elif chosen_worker not in self._names:
+            if chosen_worker not in self._names:
                 print('That is not your worker')
                 continue
             filtered_moves = [move for move in valid_moves if filter_move(move)]
@@ -87,15 +92,14 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
         while True:
             print('Select a direction to move (n, ne, e, se, s, sw, w, nw)')
             chosen_move = input()
-            if chosen_move not in DIRECTIONS.keys():
+            if chosen_move not in DIRECTIONS:
                 print('Not a valid direction')
                 continue
             filtered_moves = [move for move in valid_moves if filter_move(move)]
             if filtered_moves:
                 break
-            else:
-                print(f'Cannot move {chosen_move}')
-        
+            print(f'Cannot move {chosen_move}')
+
         return chosen_move, filtered_moves
 
     def _select_build(self, valid_moves) -> tuple[str, list[tuple[str, str, str]]]:
@@ -106,14 +110,13 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
         while True:
             print('Select a direction to build (n, ne, e, se, s, sw, w, nw)')
             chosen_build = input()
-            if chosen_build not in DIRECTIONS.keys():
+            if chosen_build not in DIRECTIONS:
                 print('Not a valid direction')
                 continue
             filtered_moves = [move for move in valid_moves if filter_move(move)]
             if filtered_moves:
                 break
-            else:
-                print(f'Cannot build {chosen_build}')
+            print(f'Cannot build {chosen_build}')
 
         return chosen_build, filtered_moves
 
@@ -160,7 +163,8 @@ class SantoriniPlayerHeuristic(SantoriniPlayerBase):
     """
     SantoriniPlayerHeuristic
     ------------------------
-    Concrete player class that selects a move according to the move's heuristic score
+    Concrete player class that selects a move according to the move's heuristic score,
+    breaking ties between moves with the maximum score at random
     """
 
     _multipliers = {
