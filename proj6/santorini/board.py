@@ -13,6 +13,7 @@ from .worker import SantoriniWorker
 from .player import SantoriniPlayerBase
 from .constants import DIRECTIONS
 
+
 class SantoriniBoard:
     """
     SantoriniBoard
@@ -73,6 +74,18 @@ class SantoriniBoard:
 
         return board
 
+    # TERMINATION METHODS
+
+    def check_termination(self, player: SantoriniPlayerBase) -> bool:
+        """Check whether the game's termination conditions are active"""
+
+        for worker in self._workers:
+            tile = self._get_tile(worker.location)
+            if tile.is_victory_level():
+                return True
+
+        return not bool(self.get_valid_moves(player))
+
     # CALCULATION METHODS
 
     def get_heuristic_score(self, player: SantoriniPlayerBase, infinite=False) -> tuple:
@@ -106,18 +119,6 @@ class SantoriniBoard:
     def _get_distance(self, location1: tuple, location2: tuple) -> int:
         diffs = [abs(loc1 - loc2) for loc1, loc2 in zip(location1, location2)]
         return max(diffs)
-
-    # TERMINATION METHODS
-
-    def check_termination(self, player: SantoriniPlayerBase) -> bool:
-        """Check whether the game's termination conditions are active"""
-
-        for worker in self._workers:
-            tile = self._get_tile(worker.location)
-            if tile.is_victory_level():
-                return True
-
-        return not bool(self.get_valid_moves(player))
 
     # MOVE GENERATION METHODS
 

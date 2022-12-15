@@ -8,12 +8,13 @@ and allows extensions to new interfaces with minimal changes
 import sys
 from abc import ABC, abstractmethod
 
+
 from .board import SantoriniBoard
 from .worker import SantoriniWorker
 from .player import (SantoriniPlayerHuman, SantoriniPlayerRandom, SantoriniPlayerHeuristic)
-
 from .decorators import add_heuristic_score
 from .memento import SantoriniOriginator, SantoriniCaretaker
+
 
 class SantoriniStateBase(ABC):
     """

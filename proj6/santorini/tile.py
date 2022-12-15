@@ -7,6 +7,7 @@ on the Santorini game board with same validation logic embedded
 
 from .worker import SantoriniWorker
 
+
 class SantoriniTile():
     """
     SantoriniTile

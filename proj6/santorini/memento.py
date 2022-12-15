@@ -69,6 +69,7 @@ class SantoriniOriginator:
         """Update the current state to the given memento's state"""
         self._state = memento.get_state()
 
+
 class SantoriniCaretaker:
     """
     SantoriniCaretaker

@@ -8,6 +8,7 @@ based on the command line arguments passed from the front-end
 from .state import (SantoriniStateBase, SantoriniStateInitial)
 from .memento import SantoriniCaretaker, SantoriniOriginator
 
+
 class SantoriniCLI():
     """
     SantoriniCLI
