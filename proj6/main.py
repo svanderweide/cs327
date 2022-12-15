@@ -7,6 +7,7 @@ main module for Santorini clone
 from argparse import ArgumentParser
 from santorini.SantoriniCLI import SantoriniCLI
 
+
 def parse() -> dict[str, str]:
     """Parse the CLI arguments and return them as a dict"""
 

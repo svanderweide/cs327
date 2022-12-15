@@ -13,7 +13,6 @@ from .worker import SantoriniWorker
 from .player import SantoriniPlayerBase
 from .constants import DIRECTIONS
 
-
 class SantoriniBoard:
     """
     SantoriniBoard

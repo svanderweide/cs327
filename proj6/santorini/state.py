@@ -8,13 +8,11 @@ and allows extensions to new interfaces with minimal changes
 import sys
 from abc import ABC, abstractmethod
 
-
 from .board import SantoriniBoard
 from .worker import SantoriniWorker
-from .player import (SantoriniPlayerHuman, SantoriniPlayerRandom, SantoriniPlayerHeuristic)
+from .player import SantoriniPlayerHuman, SantoriniPlayerRandom, SantoriniPlayerHeuristic
 from .decorators import add_heuristic_score
 from .memento import SantoriniOriginator, SantoriniCaretaker
-
 
 class SantoriniStateBase(ABC):
     """
@@ -38,7 +36,6 @@ class SantoriniStateBase(ABC):
     def run(self) -> bool:
         """Perform the action defined for the given state"""
         pass
-
 
 class SantoriniStateInitial(SantoriniStateBase):
     """
@@ -100,7 +97,6 @@ class SantoriniStateInitial(SantoriniStateBase):
         self.context.originator.state = 0, board
         self.context.transition_to(SantoriniStateRunning())
 
-
 class SantoriniStateRunning(SantoriniStateBase):
     """
     SantoriniStateRunning
@@ -160,7 +156,6 @@ class SantoriniStateRunning(SantoriniStateBase):
 
         # go to next turn
         self.context.originator.state = self._turn + 1, self._board
-
 
 class SantoriniStateEnd(SantoriniStateBase):
     """

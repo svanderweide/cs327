@@ -7,7 +7,6 @@ with easy extension / expansion if more decorators are required
 
 from functools import wraps
 
-
 def add_heuristic_score(func, player, board):
     """Add the log of the heuristic score to the player's description"""
 

@@ -1,4 +1,8 @@
-"""Constants module for Santorini game-related contants"""
+"""
+Constants module
+----------------
+Holds any constants required for the Santorini game
+"""
 
 DIRECTIONS = {
     'n':  (-1, 0),

@@ -8,7 +8,6 @@ Santorini game with (1) undo, (2) redo, and (3) next capabilities
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
-
 class Memento(ABC):
     """
     Memento
@@ -21,7 +20,6 @@ class Memento(ABC):
     def get_state(self):
         """Return the memento's state"""
         pass
-
 
 class SantoriniMemento(Memento):
     """
@@ -37,7 +35,6 @@ class SantoriniMemento(Memento):
     def get_state(self):
         """Extract the state from the SantoriniMemento instance"""
         return self._state
-
 
 class SantoriniOriginator:
     """
@@ -68,7 +65,6 @@ class SantoriniOriginator:
     def restore(self, memento: Memento):
         """Update the current state to the given memento's state"""
         self._state = memento.get_state()
-
 
 class SantoriniCaretaker:
     """

@@ -5,9 +5,8 @@ Implements the bare-bones CLI required to run the Santorini game
 based on the command line arguments passed from the front-end
 """
 
-from .state import (SantoriniStateBase, SantoriniStateInitial)
+from .state import SantoriniStateBase, SantoriniStateInitial
 from .memento import SantoriniCaretaker, SantoriniOriginator
-
 
 class SantoriniCLI():
     """

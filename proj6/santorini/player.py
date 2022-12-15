@@ -10,7 +10,6 @@ from random import choice
 
 from .constants import DIRECTIONS
 
-
 class SantoriniPlayerBase(ABC):
     """
     SantoriniPlayerBase
@@ -56,7 +55,6 @@ class SantoriniPlayerBase(ABC):
 
     def __str__(self) -> str:
         return f'{self._col}'
-
 
 class SantoriniPlayerHuman(SantoriniPlayerBase):
     """
@@ -135,7 +133,6 @@ class SantoriniPlayerHuman(SantoriniPlayerBase):
 
         return chosen_name, chosen_move, chosen_build
 
-
 class SantoriniPlayerRandom(SantoriniPlayerBase):
     """
     SantoriniPlayerRandom
@@ -160,7 +157,6 @@ class SantoriniPlayerRandom(SantoriniPlayerBase):
         print(f'{chosen_name},{chosen_move},{chosen_build}')
 
         return chosen_name, chosen_move, chosen_build
-
 
 class SantoriniPlayerHeuristic(SantoriniPlayerBase):
     """
