@@ -17,6 +17,11 @@ class SantoriniTile():
         self._worker = worker
     
     worker = property(_get_worker, _set_worker)
+
+    def _get_level(self) -> int:
+        return self._level
+    
+    height_score = property(_get_level)
     
     def build(self) -> None:
         self._level += 1
