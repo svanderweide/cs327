@@ -1,4 +1,9 @@
-"""Santorini board module"""
+"""
+Board module
+------------
+Implements the Santorini game board itself, which maintains most of the game's
+validation, logical state, and functions as an interface for the players
+"""
 
 from math import inf
 from re import match
@@ -9,6 +14,13 @@ from .player import SantoriniPlayerBase
 from .constants import DIRECTIONS
 
 class SantoriniBoard:
+    """
+    SantoriniBoard
+    --------------
+    Responsible for generating and validating possible moves,
+    maintaining the displayed interface, calculating heuristic scores
+    for players and moves, and checking for termination conditions
+    """
 
     def __init__(self, dim=(5, 5), workers=None) -> None:
         self._dim = dim
@@ -16,7 +28,9 @@ class SantoriniBoard:
         self._workers: list[SantoriniWorker] = workers
         if workers:
             self._init_workers()
-    
+
+    # SET-UP METHODS
+
     def _create_tiles(self) -> list[list[SantoriniTile]]:
         tiles = []
         for _ in range(self._dim[0]):
@@ -26,26 +40,51 @@ class SantoriniBoard:
             tiles.append(row)
         return tiles
 
-    def _get_tile(self, location: tuple) -> SantoriniTile:
-        return self._tiles[location[0]][location[1]]
-
-    def _get_distance(self, location1: tuple, location2: tuple) -> int:
-        diffs = [abs(loc1 - loc2) for loc1, loc2 in zip(location1, location2)]
-        return max(diffs)
-
     def _init_workers(self) -> None:
         for worker in self._workers:
             self._worker_move(worker, (0, 0))
-    
-    def get_heuristic_score(self, player: SantoriniPlayerBase, infinite=False) -> tuple[int, int, int]:
+
+    # AUXILIARY METHODS
+
+    def _get_tile(self, location: tuple) -> SantoriniTile:
+        return self._tiles[location[0]][location[1]]
+
+    def get_worker_names(self, player: SantoriniPlayerBase=None) -> list[str]:
+        """Generate a list of workers on the board where the colors are the same"""
+
+        col = player.col if player else ''
+        names = [worker.name for worker in self._workers if match(col, worker.col)]
+        return names
+
+    def __str__(self) -> str:
+
+        board = ''
+        row_division = '+--' * self._dim[1] + '+'
+
+        board += row_division
+        for row in range(self._dim[0]):
+            board += '\n'
+            board += '|'
+            for col in range(self._dim[1]):
+                board += str(self._tiles[row][col])
+                board += '|'
+            board += '\n'
+            board += row_division
+
+        return board
+
+    # CALCULATION METHODS
+
+    def get_heuristic_score(self, player: SantoriniPlayerBase, infinite=False) -> tuple:
+        """Return the player's current heuristic score"""
 
         # get current location of player's workers
         player_locations = [worker.location for worker in self._workers if worker.col == player.col]
 
         # get current location of opponent's workers
-        opponent_locations = [worker.location for worker in self._workers if worker.col != player.col]
+        opp_locations = [worker.location for worker in self._workers if worker.col != player.col]
 
-        return self._calculate_heuristic_score(player_locations, opponent_locations, infinite)
+        return self._calculate_heuristic_score(player_locations, opp_locations, infinite)
 
     def _calculate_heuristic_score(self, player_locations, opponent_locations, infinite):
 
@@ -59,12 +98,19 @@ class SantoriniBoard:
 
         distances = []
         for loc2 in opponent_locations:
-            distances.append(min([self._get_distance(loc1, loc2) for loc1 in player_locations]))
+            distances.append(min(self._get_distance(loc1, loc2) for loc1 in player_locations))
         distance_score = 8 - sum(distances)
 
         return (height_score, center_score, distance_score)
 
+    def _get_distance(self, location1: tuple, location2: tuple) -> int:
+        diffs = [abs(loc1 - loc2) for loc1, loc2 in zip(location1, location2)]
+        return max(diffs)
+
+    # TERMINATION METHODS
+
     def check_termination(self, player: SantoriniPlayerBase) -> bool:
+        """Check whether the game's termination conditions are active"""
 
         for worker in self._workers:
             tile = self._get_tile(worker.location)
@@ -73,25 +119,11 @@ class SantoriniBoard:
 
         return not bool(self.get_valid_moves(player))
 
-    def get_worker_names(self, player: SantoriniPlayerBase=None) -> list[str]:
-        col = player.col if player else ''
-        names = [worker.name for worker in self._workers if match(col, worker.col)]
-        return names
-
-    def implement_move(self, chosen: tuple[str, str, str]):
-
-        name, move, build = chosen
-
-        worker = [worker for worker in self._workers if worker.name == name][0]
-
-        move_direction = DIRECTIONS.get(move)
-        build_direction = DIRECTIONS.get(build)
-
-        self._worker_move(worker, move_direction)
-        self._worker_build(worker, build_direction)
+    # MOVE GENERATION METHODS
 
     def get_valid_moves(self, player: SantoriniPlayerBase,
                               heuristic=False) -> list[dict]:
+        """Generate a list of the player's valid moves (and heuristic scores)"""
 
         workers = [worker for worker in self._workers if worker.col == player.col]
 
@@ -108,7 +140,6 @@ class SantoriniBoard:
 
         worker_moves = []
 
-        name = work.name
         src = work.location
 
         # unoccupy the original space to allow building after moving
@@ -134,7 +165,7 @@ class SantoriniBoard:
                     if self._validate_build(dst2):
 
                         valid_move = {
-                            'name': name,
+                            'name': work.name,
                             'move': dir1,
                             'build': dir2,
                             'score': heuristic_score
@@ -145,33 +176,28 @@ class SantoriniBoard:
 
         # re-occupy the original space
         src_tile.worker = work
-        
+
         return worker_moves
 
-    def _validate_move(self, src: tuple, dst: tuple) -> bool:
+    # MOVE METHODS
 
-        src_tile = self._get_tile(src)
+    def implement_move(self, chosen: tuple[str, str, str]):
+        """Implement the chosen move on the board
 
-        if (dst[0] < 0 or dst[0] >= self._dim[0]): return False
-        if (dst[1] < 0 or dst[1] >= self._dim[1]): return False
+        Args:
+            tuple[str, str, str]:   a tuple of worker name, move direction,
+                                    and build direction to be implemented
+        """
 
-        dst_tile = self._get_tile(dst)
+        name, move, build = chosen
 
-        if not src_tile.reaches(dst_tile): return False
-        if dst_tile.is_occupied(): return False
+        worker = [worker for worker in self._workers if worker.name == name][0]
 
-        return True
+        move_direction = DIRECTIONS.get(move)
+        build_direction = DIRECTIONS.get(build)
 
-    def _validate_build(self, dst: tuple) -> bool:
-
-        if (dst[0] < 0 or dst[0] >= self._dim[0]): return False
-        if (dst[1] < 0 or dst[1] >= self._dim[1]): return False
-
-        dst_tile = self._get_tile(dst)
-
-        if dst_tile.is_occupied(): return False
-
-        return True
+        self._worker_move(worker, move_direction)
+        self._worker_build(worker, build_direction)
 
     def _worker_move(self, worker: SantoriniWorker, direction: tuple) -> None:
 
@@ -191,24 +217,41 @@ class SantoriniBoard:
 
         src_location = worker.location
         dst_location = tuple(i + j for i,j in zip(src_location, direction))
-    
+
         # assumes error checking has already occurred
         dst_tile = self._get_tile(dst_location)
         dst_tile.build()
 
-    def __str__(self) -> str:
-        
-        board = ''
-        row_division = '+--' * self._dim[1] + '+'
+    # VALIDATION METHODS
 
-        board += row_division
-        for row in range(self._dim[0]):
-            board += '\n'
-            board += '|'
-            for col in range(self._dim[1]):
-                board += str(self._tiles[row][col])
-                board += '|'
-            board += '\n'
-            board += row_division
+    def _validate_move(self, src: tuple, dst: tuple) -> bool:
 
-        return board
+        src_tile = self._get_tile(src)
+
+        if (dst[0] < 0 or dst[0] >= self._dim[0]):
+            return False
+        if (dst[1] < 0 or dst[1] >= self._dim[1]):
+            return False
+
+        dst_tile = self._get_tile(dst)
+
+        if not src_tile.reaches(dst_tile):
+            return False
+        if dst_tile.is_occupied():
+            return False
+
+        return True
+
+    def _validate_build(self, dst: tuple) -> bool:
+
+        if (dst[0] < 0 or dst[0] >= self._dim[0]):
+            return False
+        if (dst[1] < 0 or dst[1] >= self._dim[1]):
+            return False
+
+        dst_tile = self._get_tile(dst)
+
+        if dst_tile.is_occupied():
+            return False
+
+        return True
